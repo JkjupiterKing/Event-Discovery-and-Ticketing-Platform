@@ -8,6 +8,10 @@ import {
   Box,
   Container,
   Link,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogTitle,
 } from "@mui/material";
 import axios from "axios";
 
@@ -20,14 +24,15 @@ const Register = () => {
   const [openSnackbar, setOpenSnackbar] = useState(false);
   const [snackbarMessage, setSnackbarMessage] = useState("");
   const [snackbarSeverity, setSnackbarSeverity] = useState("success");
+  const [dialogOpen, setDialogOpen] = useState(false); // Dialog state
 
   // Password validation rules
   const validatePassword = (password) => {
-    const minLength = 8; // Minimum length
-    const hasUpperCase = /[A-Z]/.test(password); // At least one uppercase letter
-    const hasLowerCase = /[a-z]/.test(password); // At least one lowercase letter
-    const hasNumber = /\d/.test(password); // At least one number
-    const hasSpecialChar = /[!@#$%^&*(),.?":{}|<>]/.test(password); // At least one special character
+    const minLength = 8;
+    const hasUpperCase = /[A-Z]/.test(password);
+    const hasLowerCase = /[a-z]/.test(password);
+    const hasNumber = /\d/.test(password);
+    const hasSpecialChar = /[!@#$%^&*(),.?":{}|<>]/.test(password);
 
     return (
       password.length >= minLength &&
@@ -71,8 +76,7 @@ const Register = () => {
       );
 
       if (response.status === 200) {
-        setSnackbarMessage("Registration successful! You can now log in.");
-        setSnackbarSeverity("success");
+        setDialogOpen(true); // Open dialog on successful registration
 
         // Clear the form fields
         setFirstName("");
@@ -83,8 +87,8 @@ const Register = () => {
       } else {
         setSnackbarMessage("Registration failed.");
         setSnackbarSeverity("error");
+        setOpenSnackbar(true);
       }
-      setOpenSnackbar(true);
     } catch (error) {
       setSnackbarMessage(error.response.data.message || "Registration failed");
       setSnackbarSeverity("error");
@@ -94,6 +98,10 @@ const Register = () => {
 
   const handleCloseSnackbar = () => {
     setOpenSnackbar(false);
+  };
+
+  const handleCloseDialog = () => {
+    setDialogOpen(false);
   };
 
   return (
@@ -168,7 +176,7 @@ const Register = () => {
             variant="contained"
             color="primary"
             fullWidth
-            sx={{ marginTop: 2 }}
+            sx={{ marginTop: 2, width: 100, marginLeft: 15 }}
           >
             Register
           </Button>
@@ -185,6 +193,9 @@ const Register = () => {
           </Link>
         </Typography>
       </Box>
+      <br />
+      <br />
+      {/* Snackbar for error messages */}
       <Snackbar
         open={openSnackbar}
         autoHideDuration={6000}
@@ -194,6 +205,19 @@ const Register = () => {
           {snackbarMessage}
         </Alert>
       </Snackbar>
+
+      {/* Dialog for successful registration */}
+      <Dialog open={dialogOpen} onClose={handleCloseDialog}>
+        <DialogTitle>Registration Successful</DialogTitle>
+        <DialogContent>
+          <Typography>Registration successful! You can now log in.</Typography>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleCloseDialog} color="primary">
+            OK
+          </Button>
+        </DialogActions>
+      </Dialog>
     </Container>
   );
 };

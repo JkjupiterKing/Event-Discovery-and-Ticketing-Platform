@@ -10,7 +10,7 @@ import {
   Link,
 } from "@mui/material";
 import axios from "axios";
-import { useNavigate } from "react-router-dom"; // Import useNavigate
+import { useNavigate } from "react-router-dom";
 
 const Login = () => {
   const [email, setEmail] = useState("");
@@ -18,22 +18,27 @@ const Login = () => {
   const [openSnackbar, setOpenSnackbar] = useState(false);
   const [snackbarMessage, setSnackbarMessage] = useState("");
   const [snackbarSeverity, setSnackbarSeverity] = useState("success");
-  const navigate = useNavigate(); // Initialize navigate
+  const navigate = useNavigate();
 
   const handleLogin = async (e) => {
-    e.preventDefault(); // Prevent the default form submission
+    e.preventDefault();
     try {
       const response = await axios.post("http://localhost:8080/users/login", {
         email,
         password,
       });
+
+      // Store user data in local storage
+      localStorage.setItem("user", JSON.stringify(response.data));
+
       setSnackbarMessage("Login successful!");
       setSnackbarSeverity("success");
       setOpenSnackbar(true);
-      // Redirect to home page after successful login
+
+      // Redirect to the dashboard after successful login
       navigate("/home");
     } catch (error) {
-      setSnackbarMessage(error.response.data.message || "Login failed");
+      setSnackbarMessage("Invalid email or password.");
       setSnackbarSeverity("error");
       setOpenSnackbar(true);
     }

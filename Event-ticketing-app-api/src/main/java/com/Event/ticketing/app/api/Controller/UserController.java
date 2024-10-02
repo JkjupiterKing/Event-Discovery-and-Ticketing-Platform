@@ -5,6 +5,7 @@ import com.Event.ticketing.app.api.Repo.UserRepo;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.http.HttpStatus;
 
 import java.nio.charset.StandardCharsets;
 import java.util.Base64;
@@ -39,20 +40,23 @@ public class UserController {
         return ResponseEntity.ok("User registered successfully.");
     }
 
-    // Login Endpoint
     @PostMapping("/login")
-    public ResponseEntity<String> login(@RequestBody User user) {
+    public ResponseEntity<User> login(@RequestBody User user) {
         Optional<User> existingUser = userRepository.findByEmail(user.getEmail());
+
         if (existingUser.isPresent()) {
-            // Decode the password stored in the database
             String storedPassword = existingUser.get().getPassword();
             String decodedPassword = new String(Base64.getDecoder().decode(storedPassword), StandardCharsets.UTF_8);
+
             if (decodedPassword.equals(user.getPassword())) {
-                return ResponseEntity.ok("Login successful!");
+                User foundUser = existingUser.get();
+                return ResponseEntity.ok(foundUser);
             }
         }
-        return ResponseEntity.status(401).body("Invalid email or password.");
+
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(null);
     }
+
 
     // Forgot Password Endpoint
     @PostMapping("/forgot-password")
@@ -80,14 +84,35 @@ public class UserController {
 
     // Update User
     @PutMapping("/{id}")
-    public ResponseEntity<String> updateUser(@PathVariable Long id, @RequestBody User updatedUser) {
-        if (!userRepository.existsById(id)) {
-            return ResponseEntity.status(404).body("User not found.");
+    public ResponseEntity<User> updateUser(@PathVariable Long id, @RequestBody User updatedUser) {
+        Optional<User> existingUserOpt = userRepository.findById(id);
+
+        if (!existingUserOpt.isPresent()) {
+            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
         }
-        updatedUser.setId(id);
-        userRepository.save(updatedUser);
-        return ResponseEntity.ok("User updated successfully.");
+
+        User existingUser = existingUserOpt.get();
+
+        // Update only the fields that are provided in the request body
+        if (updatedUser.getFirstname() != null) {
+            existingUser.setFirstname(updatedUser.getFirstname());
+        }
+        if (updatedUser.getLastname() != null) {
+            existingUser.setLastname(updatedUser.getLastname());
+        }
+        if (updatedUser.getEmail() != null) {
+            existingUser.setEmail(updatedUser.getEmail());
+        }
+        if (updatedUser.getPassword() != null) {
+            // If a new password is provided, encode it before saving
+            String encodedPassword = Base64.getEncoder().encodeToString(updatedUser.getPassword().getBytes(StandardCharsets.UTF_8));
+            existingUser.setPassword(encodedPassword);
+        }
+
+        userRepository.save(existingUser);
+        return ResponseEntity.ok(existingUser);
     }
+
 
     // Delete User
     @DeleteMapping("/{id}")

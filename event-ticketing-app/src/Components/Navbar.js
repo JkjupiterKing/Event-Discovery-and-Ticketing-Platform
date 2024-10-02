@@ -1,10 +1,22 @@
-import React from "react";
-import { AppBar, Toolbar, Typography, Button } from "@mui/material";
-import { Link } from "react-router-dom";
+import React, { useState } from "react";
+import {
+  AppBar,
+  Toolbar,
+  Typography,
+  Button,
+  IconButton,
+  Drawer,
+  List,
+  ListItem,
+  ListItemIcon,
+  ListItemText,
+} from "@mui/material";
+import { Link, useNavigate } from "react-router-dom";
 import HomeIcon from "@mui/icons-material/Home";
 import EventNoteIcon from "@mui/icons-material/EventNote";
 import AccountCircleIcon from "@mui/icons-material/AccountCircle";
-import ExitToAppIcon from "@mui/icons-material/ExitToApp"; // Importing Logout icon
+import ExitToAppIcon from "@mui/icons-material/ExitToApp";
+import MenuIcon from "@mui/icons-material/Menu";
 import { styled } from "@mui/system";
 
 const StyledAppBar = styled(AppBar)({
@@ -25,23 +37,77 @@ const StyledButton = styled(Button)({
   },
 });
 
+const LogoContainer = styled("div")({
+  display: "flex",
+  alignItems: "center",
+  marginRight: "50em",
+});
+
+// Optional: Create a styled drawer component
+const StyledDrawer = styled(Drawer)({
+  "& .MuiDrawer-paper": {
+    background: "linear-gradient(to right, #D5006D, #FF6F20)",
+    color: "#FAF7F0",
+  },
+});
+
 const Navbar = () => {
+  const navigate = useNavigate();
+  const [drawerOpen, setDrawerOpen] = useState(false);
+
+  const handleLogout = () => {
+    localStorage.removeItem("user");
+    navigate("/login");
+  };
+
+  const toggleDrawer = (open) => (event) => {
+    if (
+      event.type === "keydown" &&
+      (event.key === "Tab" || event.key === "Shift")
+    ) {
+      return;
+    }
+    setDrawerOpen(open);
+  };
+
   return (
     <StyledAppBar position="static">
       <StyledToolbar>
-        <Typography variant="h6">Event Ticketing</Typography>
+        <IconButton edge="start" color="inherit" onClick={toggleDrawer(true)}>
+          <MenuIcon />
+        </IconButton>
+        <LogoContainer>
+          <img
+            src={`${process.env.PUBLIC_URL}/ticket.gif`}
+            alt="Logo"
+            style={{ width: 40, marginRight: 4 }}
+          />
+          <Typography variant="h6" style={{ margin: 0 }}>
+            Event Ticketing
+          </Typography>
+        </LogoContainer>
 
+        <StyledDrawer
+          anchor="left"
+          open={drawerOpen}
+          onClose={toggleDrawer(false)}
+        >
+          <List>
+            <ListItem button onClick={() => navigate("/home")} sx={{ pr: 7 }}>
+              <ListItemIcon>
+                <HomeIcon />
+              </ListItemIcon>
+              <ListItemText primary="Home" />
+            </ListItem>
+            <ListItem button onClick={() => navigate("/events")} sx={{ pr: 7 }}>
+              <ListItemIcon>
+                <EventNoteIcon />
+              </ListItemIcon>
+              <ListItemText primary="Events" />
+            </ListItem>
+          </List>
+        </StyledDrawer>
         <div>
-          <StyledButton component={Link} to="/" startIcon={<HomeIcon />}>
-            Home
-          </StyledButton>
-          <StyledButton
-            component={Link}
-            to="/events"
-            startIcon={<EventNoteIcon />}
-          >
-            Events
-          </StyledButton>
           <StyledButton
             component={Link}
             to="/profile"
@@ -49,11 +115,7 @@ const Navbar = () => {
           >
             Profile
           </StyledButton>
-          <StyledButton
-            component={Link}
-            to="/login"
-            startIcon={<ExitToAppIcon />}
-          >
+          <StyledButton onClick={handleLogout} startIcon={<ExitToAppIcon />}>
             Logout
           </StyledButton>
         </div>

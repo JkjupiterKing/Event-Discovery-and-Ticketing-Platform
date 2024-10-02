@@ -1,4 +1,4 @@
 .App {
-  background-image: url(./Background.jpg);
+  background-image: url(../public/Background.jpg);
   text-align: center;
 }
