@@ -105,6 +105,16 @@ const Navbar = () => {
               </ListItemIcon>
               <ListItemText primary="Events" />
             </ListItem>
+            <ListItem
+              button
+              onClick={() => navigate("/category-management")}
+              sx={{ pr: 7 }}
+            >
+              <ListItemIcon>
+                <EventNoteIcon />
+              </ListItemIcon>
+              <ListItemText primary="Category Management" />
+            </ListItem>
           </List>
         </StyledDrawer>
         <div>

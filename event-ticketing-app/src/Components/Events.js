@@ -68,7 +68,7 @@ const Events = () => {
 
   const handleModalClose = () => {
     setModalOpen(false);
-    setNewEvent({ title: "", date: "", image: "" }); // Reset the new event state
+    setNewEvent({ title: "", date: "", image: "" });
   };
 
   const handleInputChange = (e) => {
@@ -77,10 +77,9 @@ const Events = () => {
   };
 
   const handleSubmit = () => {
-    // Logic for creating a new event
     const newId = events.length + 1;
     setEvents((prev) => [...prev, { ...newEvent, id: newId }]);
-    handleModalClose(); // Close modal after creating event
+    handleModalClose();
   };
 
   return (
@@ -103,12 +102,13 @@ const Events = () => {
           />
           <Button
             variant="contained"
-            color="primary"
+            color="secondary"
             onClick={handleCreateEvent}
           >
             Create Event
           </Button>
         </Box>
+        <br />
         <Grid container spacing={4}>
           {filteredEvents.map((event) => (
             <Grid item xs={12} sm={6} md={4} key={event.id}>
@@ -132,7 +132,6 @@ const Events = () => {
           ))}
         </Grid>
       </Container>
-      <br />
       <br />
       {/* Modal for creating an event */}
       <Modal open={modalOpen} onClose={handleModalClose}>

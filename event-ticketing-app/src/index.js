@@ -17,7 +17,16 @@ const customTheme = createTheme({
     },
   },
   typography: {
-    fontFamily: "Roboto, sans-serif",
+    fontFamily: "Open Sans, sans-serif",
+    h1: {
+      fontFamily: "Poppins, sans-serif",
+      fontWeight: 700,
+    },
+    h2: {
+      fontFamily: "Poppins, sans-serif",
+      fontWeight: 600,
+    },
+    // Add styles for other headings as needed
   },
 });
 

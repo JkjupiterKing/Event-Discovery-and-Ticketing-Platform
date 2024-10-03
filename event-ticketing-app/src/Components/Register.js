@@ -12,7 +12,9 @@ import {
   DialogActions,
   DialogContent,
   DialogTitle,
+  IconButton,
 } from "@mui/material";
+import { Visibility, VisibilityOff } from "@mui/icons-material";
 import axios from "axios";
 
 const Register = () => {
@@ -21,6 +23,7 @@ const Register = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [openSnackbar, setOpenSnackbar] = useState(false);
   const [snackbarMessage, setSnackbarMessage] = useState("");
   const [snackbarSeverity, setSnackbarSeverity] = useState("success");
@@ -128,6 +131,8 @@ const Register = () => {
             fullWidth
             required
             margin="normal"
+            variant="standard"
+            size="small"
           />
           <TextField
             label="Last Name"
@@ -136,6 +141,8 @@ const Register = () => {
             fullWidth
             required
             margin="normal"
+            variant="standard"
+            size="small"
           />
           <TextField
             label="Email"
@@ -144,24 +151,50 @@ const Register = () => {
             fullWidth
             required
             margin="normal"
+            variant="standard"
+            size="small"
           />
           <TextField
             label="Password"
-            type="password"
+            type={showPassword ? "text" : "password"}
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             fullWidth
             required
             margin="normal"
+            variant="standard"
+            size="small"
+            InputProps={{
+              endAdornment: (
+                <IconButton
+                  onClick={() => setShowPassword(!showPassword)}
+                  edge="end"
+                >
+                  {showPassword ? <VisibilityOff /> : <Visibility />}
+                </IconButton>
+              ),
+            }}
           />
           <TextField
             label="Confirm Password"
-            type="password"
+            type={showPassword ? "text" : "password"}
             value={confirmPassword}
             onChange={(e) => setConfirmPassword(e.target.value)}
             fullWidth
             required
             margin="normal"
+            variant="standard"
+            size="small"
+            InputProps={{
+              endAdornment: (
+                <IconButton
+                  onClick={() => setShowPassword(!showPassword)}
+                  edge="end"
+                >
+                  {showPassword ? <VisibilityOff /> : <Visibility />}
+                </IconButton>
+              ),
+            }}
           />
           <Typography
             variant="body2"
@@ -176,7 +209,7 @@ const Register = () => {
             variant="contained"
             color="primary"
             fullWidth
-            sx={{ marginTop: 2, width: 100, marginLeft: 15 }}
+            sx={{ marginTop: 2, width: "8em", marginLeft: "8em" }}
           >
             Register
           </Button>

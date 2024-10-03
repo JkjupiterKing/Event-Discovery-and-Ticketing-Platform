@@ -3,22 +3,44 @@ import {
   TextField,
   Button,
   Typography,
-  Snackbar,
-  Alert,
   Container,
   Paper,
+  IconButton,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogTitle,
 } from "@mui/material";
+import { Visibility, VisibilityOff } from "@mui/icons-material";
 import axios from "axios";
-import { useNavigate } from "react-router-dom"; // Import useNavigate
+import { useNavigate } from "react-router-dom";
 
 const ForgotPassword = () => {
   const [email, setEmail] = useState("");
   const [newPassword, setNewPassword] = useState("");
-  const [openSnackbar, setOpenSnackbar] = useState(false);
-  const [snackbarMessage, setSnackbarMessage] = useState("");
-  const [snackbarSeverity, setSnackbarSeverity] = useState("success");
+  const [showPassword, setShowPassword] = useState(false);
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const [dialogMessage, setDialogMessage] = useState("");
+  const [dialogTitle, setDialogTitle] = useState("");
 
-  const navigate = useNavigate(); // Initialize useNavigate
+  const navigate = useNavigate();
+
+  // Password validation rules
+  const validatePassword = (password) => {
+    const minLength = 8;
+    const hasUpperCase = /[A-Z]/.test(password);
+    const hasLowerCase = /[a-z]/.test(password);
+    const hasNumber = /\d/.test(password);
+    const hasSpecialChar = /[!@#$%^&*(),.?":{}|<>]/.test(password);
+
+    return (
+      password.length >= minLength &&
+      hasUpperCase &&
+      hasLowerCase &&
+      hasNumber &&
+      hasSpecialChar
+    );
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -26,17 +48,19 @@ const ForgotPassword = () => {
     // Basic email validation
     const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailPattern.test(email)) {
-      setSnackbarMessage("Please enter a valid email address.");
-      setSnackbarSeverity("error");
-      setOpenSnackbar(true);
+      setDialogTitle("Error");
+      setDialogMessage("Please enter a valid email address.");
+      setDialogOpen(true);
       return;
     }
 
-    // Basic password strength check
-    if (newPassword.length < 8) {
-      setSnackbarMessage("Password must be at least 8 characters long.");
-      setSnackbarSeverity("error");
-      setOpenSnackbar(true);
+    // Validate password rules
+    if (!validatePassword(newPassword)) {
+      setDialogTitle("Error");
+      setDialogMessage(
+        "Password must be at least 8 characters long, contain uppercase and lowercase letters, a number, and a special character."
+      );
+      setDialogOpen(true);
       return;
     }
 
@@ -47,9 +71,10 @@ const ForgotPassword = () => {
         )}&newPassword=${encodeURIComponent(newPassword)}`
       );
 
-      setSnackbarMessage(response.data);
-      setSnackbarSeverity("success");
-      setOpenSnackbar(true);
+      // Open dialog for successful update
+      setDialogTitle("Success");
+      setDialogMessage("Password updated successfully!");
+      setDialogOpen(true);
 
       // Clear the form fields
       setEmail("");
@@ -60,16 +85,15 @@ const ForgotPassword = () => {
         navigate("/login");
       }, 2000); // Adjust the delay as needed
     } catch (error) {
-      setSnackbarMessage(
-        error.response.data.message || "Failed to update password."
-      );
-      setSnackbarSeverity("error");
-      setOpenSnackbar(true);
+      // Open dialog for error
+      setDialogTitle("Error");
+      setDialogMessage(error.response.data.message || "Email not found.");
+      setDialogOpen(true);
     }
   };
 
-  const handleCloseSnackbar = () => {
-    setOpenSnackbar(false);
+  const handleCloseDialog = () => {
+    setDialogOpen(false);
   };
 
   return (
@@ -86,18 +110,31 @@ const ForgotPassword = () => {
             fullWidth
             required
             margin="normal"
-            variant="outlined"
+            variant="standard"
+            size="small"
           />
           <TextField
             label="New Password"
-            type="password"
+            type={showPassword ? "text" : "password"}
             value={newPassword}
             onChange={(e) => setNewPassword(e.target.value)}
             fullWidth
             required
             margin="normal"
-            variant="outlined"
-            helperText="Password must be at least 8 characters long."
+            variant="standard"
+            size="small"
+            InputProps={{
+              endAdornment: (
+                <IconButton
+                  onClick={() => setShowPassword(!showPassword)}
+                  edge="end"
+                  sx={{ marginRight: "0.1em" }}
+                >
+                  {showPassword ? <VisibilityOff /> : <Visibility />}
+                </IconButton>
+              ),
+            }}
+            helperText="Password must be at least 8 characters long, contain uppercase and lowercase letters, a number, and a special character."
           />
           <Button
             type="submit"
@@ -109,16 +146,29 @@ const ForgotPassword = () => {
             Update Password
           </Button>
         </form>
-        <Snackbar
-          open={openSnackbar}
-          autoHideDuration={6000}
-          onClose={handleCloseSnackbar}
-        >
-          <Alert onClose={handleCloseSnackbar} severity={snackbarSeverity}>
-            {snackbarMessage}
-          </Alert>
-        </Snackbar>
       </Paper>
+
+      {/* Dialog for success or error messages */}
+      <Dialog open={dialogOpen} onClose={handleCloseDialog}>
+        <DialogTitle>{dialogTitle}</DialogTitle>
+        <DialogContent>
+          <Typography>{dialogMessage}</Typography>
+        </DialogContent>
+        <DialogActions>
+          <Button
+            onClick={() => {
+              handleCloseDialog();
+              // If the dialog title is "Success", navigate to login
+              if (dialogTitle === "Success") {
+                navigate("/login");
+              }
+            }}
+            color="primary"
+          >
+            OK
+          </Button>
+        </DialogActions>
+      </Dialog>
     </Container>
   );
 };

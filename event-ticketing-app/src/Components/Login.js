@@ -8,13 +8,16 @@ import {
   Alert,
   Box,
   Link,
+  IconButton,
 } from "@mui/material";
+import { Visibility, VisibilityOff } from "@mui/icons-material";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 
 const Login = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [openSnackbar, setOpenSnackbar] = useState(false);
   const [snackbarMessage, setSnackbarMessage] = useState("");
   const [snackbarSeverity, setSnackbarSeverity] = useState("success");
@@ -71,16 +74,31 @@ const Login = () => {
             onChange={(e) => setEmail(e.target.value)}
             fullWidth
             margin="normal"
+            variant="standard"
+            size="small"
             required
           />
           <TextField
             label="Password"
-            type="password"
+            type={showPassword ? "text" : "password"}
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             fullWidth
             margin="normal"
+            variant="standard"
+            size="small"
             required
+            InputProps={{
+              endAdornment: (
+                <IconButton
+                  onClick={() => setShowPassword(!showPassword)}
+                  edge="end"
+                  sx={{ marginRight: "0.1em" }}
+                >
+                  {showPassword ? <VisibilityOff /> : <Visibility />}
+                </IconButton>
+              ),
+            }}
           />
           <Box
             sx={{
