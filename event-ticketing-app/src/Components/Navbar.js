@@ -103,7 +103,7 @@ const Navbar = () => {
               <ListItemIcon>
                 <EventNoteIcon />
               </ListItemIcon>
-              <ListItemText primary="Events" />
+              <ListItemText primary="Events Management" />
             </ListItem>
             <ListItem
               button

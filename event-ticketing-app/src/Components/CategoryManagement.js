@@ -94,6 +94,9 @@ const CategoryManagement = () => {
   const [snackbarMessage, setSnackbarMessage] = useState("");
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(5);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [deleteConfirmationOpen, setDeleteConfirmationOpen] = useState(false);
+  const [categoryToDelete, setCategoryToDelete] = useState(null);
 
   // Fetch categories from the API
   const fetchCategories = async () => {
@@ -112,25 +115,28 @@ const CategoryManagement = () => {
   }, []);
 
   const handleAddCategory = async () => {
+    if (!newCategory.name || !newCategory.description) {
+      setSnackbarMessage("Enter Category name and Category Description");
+      setSnackbarOpen(true);
+      return;
+    }
+
     try {
       if (editCategory) {
-        // Update existing category
         await axios.put(`http://localhost:8080/categories/${editCategory.id}`, {
           name: newCategory.name,
           description: newCategory.description,
         });
       } else {
-        // Add new category
         await axios.post(
           "http://localhost:8080/categories/addCategory",
           newCategory
         );
       }
-      // Reset form fields
       setNewCategory({ name: "", description: "" });
       setModalOpen(false);
       setEditCategory(null);
-      fetchCategories(); // Refresh the category list
+      fetchCategories();
       setSnackbarMessage(
         editCategory
           ? "Category updated successfully."
@@ -149,23 +155,38 @@ const CategoryManagement = () => {
     setModalOpen(true);
   };
 
-  const handleDeleteCategory = async (id) => {
-    try {
-      await axios.delete(`http://localhost:8080/categories/${id}`);
-      fetchCategories(); // Refresh the category list
-      setSnackbarMessage("Category deleted successfully.");
-    } catch (error) {
-      console.error("Error deleting category:", error);
-      setSnackbarMessage("Error deleting category.");
+  const handleOpenDeleteConfirmation = (category) => {
+    setCategoryToDelete(category);
+    setDeleteConfirmationOpen(true);
+  };
+
+  const handleDeleteCategory = async () => {
+    if (categoryToDelete) {
+      try {
+        await axios.delete(
+          `http://localhost:8080/categories/${categoryToDelete.id}`
+        );
+        fetchCategories();
+        setSnackbarMessage("Category deleted successfully.");
+      } catch (error) {
+        console.error("Error deleting category:", error);
+        setSnackbarMessage("Error deleting category.");
+      }
+      setDeleteConfirmationOpen(false);
+      setSnackbarOpen(true);
     }
-    setSnackbarOpen(true);
   };
 
   const handleSnackbarClose = () => {
     setSnackbarOpen(false);
   };
 
-  // Pagination handlers
+  const filteredCategories = categories.filter(
+    (category) =>
+      category.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      category.description.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
   const handleChangePage = (event, newPage) => {
     setPage(newPage);
   };
@@ -182,20 +203,34 @@ const CategoryManagement = () => {
         <Typography variant="h4" gutterBottom>
           Category Management
         </Typography>
-        <Button
-          variant="contained"
-          color="secondary"
-          onClick={() => {
-            setModalOpen(true);
-            setEditCategory(null);
-            setNewCategory({ name: "", description: "" }); // Reset form on open
+        <Box
+          sx={{
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+            marginBottom: "1em",
           }}
-          sx={{ marginLeft: "74em" }}
         >
-          Add Category
-        </Button>
-        <br />
-        <br />
+          <TextField
+            label="Search Categories"
+            variant="outlined"
+            margin="normal"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            sx={{ width: "15em" }}
+          />
+          <Button
+            variant="contained"
+            color="secondary"
+            onClick={() => {
+              setModalOpen(true);
+              setEditCategory(null);
+              setNewCategory({ name: "", description: "" });
+            }}
+          >
+            Add Category
+          </Button>
+        </Box>
         <TableContainer component={Paper}>
           <Table>
             <TableHead>
@@ -207,11 +242,11 @@ const CategoryManagement = () => {
             </TableHead>
             <TableBody>
               {(rowsPerPage > 0
-                ? categories.slice(
+                ? filteredCategories.slice(
                     page * rowsPerPage,
                     page * rowsPerPage + rowsPerPage
                   )
-                : categories
+                : filteredCategories
               ).map((category) => (
                 <TableRow key={category.id}>
                   <TableCell>{category.name}</TableCell>
@@ -226,7 +261,7 @@ const CategoryManagement = () => {
                     </Button>
                     <Button
                       color="secondary"
-                      onClick={() => handleDeleteCategory(category.id)}
+                      onClick={() => handleOpenDeleteConfirmation(category)}
                       sx={{
                         backgroundColor: "#1976d2",
                         color: "white",
@@ -244,7 +279,7 @@ const CategoryManagement = () => {
                 <TablePagination
                   rowsPerPageOptions={[5, 10, 25, { label: "All", value: -1 }]}
                   colSpan={3}
-                  count={categories.length}
+                  count={filteredCategories.length}
                   rowsPerPage={rowsPerPage}
                   page={page}
                   onPageChange={handleChangePage}
@@ -298,6 +333,49 @@ const CategoryManagement = () => {
             >
               {editCategory ? "Update" : "Add"}
             </Button>
+          </div>
+        </Modal>
+
+        {/* Confirmation Modal for deleting a category */}
+        <Modal
+          open={deleteConfirmationOpen}
+          onClose={() => setDeleteConfirmationOpen(false)}
+        >
+          <div
+            style={{
+              padding: 20,
+              backgroundColor: "white",
+              margin: "100px auto",
+              width: "400px",
+              borderRadius: "8px",
+            }}
+          >
+            <Typography variant="h6">Confirm Deletion</Typography>
+            <Typography>
+              Are you sure you want to delete this category?
+            </Typography>
+            <Box
+              sx={{
+                display: "flex",
+                justifyContent: "flex-end",
+                marginTop: "1em",
+              }}
+            >
+              <Button
+                onClick={() => setDeleteConfirmationOpen(false)}
+                color="inherit"
+              >
+                Cancel
+              </Button>
+              <Button
+                onClick={handleDeleteCategory}
+                variant="contained"
+                color="secondary"
+                sx={{ marginLeft: "0.5em" }}
+              >
+                Confirm
+              </Button>
+            </Box>
           </div>
         </Modal>
 

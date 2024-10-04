@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   Box,
   Typography,
@@ -6,12 +6,15 @@ import {
   CardContent,
   CardMedia,
   Button,
+  Modal,
+  IconButton,
 } from "@mui/material";
 import Carousel from "react-material-ui-carousel";
 import Navbar from "./Navbar";
+import axios from "axios";
 import "./Home.css";
+import CloseIcon from "@mui/icons-material/Close";
 
-// Sample data for the carousel
 const items = [
   {
     img: "https://assets-in.bmscdn.com/promotions/cms/creatives/1727851263413_techroastshowweb.jpg",
@@ -31,41 +34,24 @@ const items = [
   },
 ];
 
-// Sample data for events
-const eventItems = [
-  {
-    title: "Movie Night: Inception",
-    img: `${process.env.PUBLIC_URL}/ticket.gif`,
-  },
-  {
-    title: "Broadway Play: Hamilton",
-    img: `${process.env.PUBLIC_URL}/ticket.gif`,
-  },
-  {
-    title: "Concert: Coldplay Live",
-    img: `${process.env.PUBLIC_URL}/ticket.gif`,
-  },
-  {
-    title: "Comedy Show: Stand Up Night",
-    img: `${process.env.PUBLIC_URL}/ticket.gif`,
-  },
-  {
-    title: "Theater: Romeo and Juliet",
-    img: `${process.env.PUBLIC_URL}/ticket.gif`,
-  },
-  {
-    title: "Film Festival: Sundance",
-    img: `${process.env.PUBLIC_URL}/ticket.gif`,
-  },
-  {
-    title: "Dance Performance: Nutcracker",
-    img: `${process.env.PUBLIC_URL}/ticket.gif`,
-  },
-];
-
 const Home = () => {
+  const [eventItems, setEventItems] = useState([]);
   const [startIndex, setStartIndex] = useState(0);
   const itemsPerPage = 5;
+  const [selectedEvent, setSelectedEvent] = useState(null); // State for selected event
+
+  useEffect(() => {
+    const fetchEvents = async () => {
+      try {
+        const response = await axios.get("http://localhost:8080/events/all");
+        setEventItems(response.data);
+      } catch (error) {
+        console.error("Error fetching events:", error);
+      }
+    };
+
+    fetchEvents();
+  }, []);
 
   const handleNext = () => {
     if (startIndex + itemsPerPage < eventItems.length) {
@@ -79,9 +65,16 @@ const Home = () => {
     }
   };
 
+  const handleCardClick = (event) => {
+    setSelectedEvent(event); // Set selected event to show details
+  };
+
+  const handleCloseModal = () => {
+    setSelectedEvent(null); // Close modal
+  };
+
   return (
     <main>
-      {/* Header Start */}
       <header>
         <Navbar />
         <img
@@ -94,9 +87,7 @@ const Home = () => {
           }}
         />
       </header>
-      {/* Header End */}
 
-      {/* Carousel Start */}
       <Box sx={{ padding: 2 }}>
         <Carousel
           autoPlay
@@ -126,9 +117,7 @@ const Home = () => {
           ))}
         </Carousel>
       </Box>
-      {/* Carousel End */}
 
-      {/* Fashion Collections Section Start */}
       <Box sx={{ padding: 2, backgroundColor: "#181C14", color: "white" }}>
         <Typography variant="h4" sx={{ marginBottom: 2 }}>
           All Events
@@ -140,17 +129,22 @@ const Home = () => {
         >
           {eventItems
             .slice(startIndex, startIndex + itemsPerPage)
-            .map((item, index) => (
-              <Card key={index} sx={{ maxWidth: 200 }}>
+            .map((item) => (
+              <Card
+                key={item.eventId}
+                sx={{ maxWidth: 200, cursor: "pointer" }}
+                onClick={() => handleCardClick(item)}
+              >
                 <CardMedia
                   component="img"
-                  alt={item.title}
+                  alt={item.eventName}
                   height="200"
-                  image={item.img}
+                  image={item.img} // Assuming your API returns an image URL
                   sx={{ width: "100%" }}
                 />
                 <CardContent>
-                  <Typography variant="h6">{item.title}</Typography>
+                  <Typography variant="h6">{item.eventName}</Typography>
+                  <Typography variant="body2">{item.description}</Typography>
                 </CardContent>
               </Card>
             ))}
@@ -187,7 +181,64 @@ const Home = () => {
         </Box>
       </Box>
       <br />
-      {/* Fashion Collections Section End */}
+
+      {/* Modal for Event Details */}
+      <Modal
+        open={Boolean(selectedEvent)}
+        onClose={handleCloseModal}
+        sx={{ display: "flex", alignItems: "center", justifyContent: "center" }}
+      >
+        <Box
+          sx={{
+            backgroundColor: "white",
+            padding: 4,
+            borderRadius: 2,
+            width: "80%",
+            maxWidth: 500,
+          }}
+        >
+          <IconButton
+            onClick={handleCloseModal}
+            sx={{ position: "absolute", right: 10, top: 10 }}
+          >
+            <CloseIcon />
+          </IconButton>
+          {selectedEvent && (
+            <>
+              <Typography variant="h5">{selectedEvent.eventName}</Typography>
+              <Typography variant="subtitle1">
+                {selectedEvent.description}
+              </Typography>
+              <Typography variant="body1">
+                <strong>Date & Time:</strong>{" "}
+                {new Date(selectedEvent.eventDateTime).toLocaleString()}
+              </Typography>
+              <Typography variant="body1">
+                <strong>Location:</strong> {selectedEvent.location}
+              </Typography>
+              <Typography variant="body1">
+                <strong>Organizer:</strong> {selectedEvent.organizer}
+              </Typography>
+              <Typography variant="body1">
+                <strong>Capacity:</strong> {selectedEvent.capacity}
+              </Typography>
+              <Typography variant="body1">
+                <strong>Registration Fee:</strong> $
+                {selectedEvent.registrationFee}
+              </Typography>
+              <Typography variant="body1">
+                <strong>Status:</strong> {selectedEvent.status}
+              </Typography>
+              <Typography variant="body1">
+                <strong>Contact Email:</strong> {selectedEvent.contactEmail}
+              </Typography>
+              <Typography variant="body1">
+                <strong>Contact Phone:</strong> {selectedEvent.contactPhone}
+              </Typography>
+            </>
+          )}
+        </Box>
+      </Modal>
     </main>
   );
 };

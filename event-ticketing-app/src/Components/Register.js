@@ -169,6 +169,7 @@ const Register = () => {
                 <IconButton
                   onClick={() => setShowPassword(!showPassword)}
                   edge="end"
+                  sx={{ marginRight: "0.1em" }}
                 >
                   {showPassword ? <VisibilityOff /> : <Visibility />}
                 </IconButton>
@@ -190,6 +191,7 @@ const Register = () => {
                 <IconButton
                   onClick={() => setShowPassword(!showPassword)}
                   edge="end"
+                  sx={{ marginRight: "0.1em" }}
                 >
                   {showPassword ? <VisibilityOff /> : <Visibility />}
                 </IconButton>

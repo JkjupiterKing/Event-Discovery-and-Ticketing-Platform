@@ -2,12 +2,5 @@ body {
   background-image: url("../public/Background.jpg");
   background-size: cover;
   background-repeat: no-repeat;
-  background-position: center;
   margin: 0;
-  height: 100vh;
-}
-
-code {
-  font-family: source-code-pro, Menlo, Monaco, Consolas, "Courier New",
-    monospace;
 }
