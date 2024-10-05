@@ -7,6 +7,7 @@ import ForgotPassword from "./Components/ForgotPassword";
 import Profile from "./Components/Profile";
 import Events from "./Components/Events";
 import Categorymanagement from "./Components/CategoryManagement";
+import CityManagement from "./Components/CityManagement";
 
 const App = () => {
   return (
@@ -20,6 +21,7 @@ const App = () => {
         <Route path="/forgot-password" element={<ForgotPassword />} />
         <Route path="/events" element={<Events />} />
         <Route path="/category-management" element={<Categorymanagement />} />
+        <Route path="/City-Management" element={<CityManagement />} />
       </Routes>
     </div>
   );

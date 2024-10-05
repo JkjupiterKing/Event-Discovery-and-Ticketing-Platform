@@ -3,9 +3,7 @@ import {
   Container,
   TextField,
   FormControl,
-  InputLabel,
   Button,
-  Paper,
   Typography,
   Box,
   Modal,
@@ -27,6 +25,7 @@ const ADD_EVENT_API = "http://localhost:8080/events/addEvent";
 const UPDATE_EVENT_API = "http://localhost:8080/events";
 const DELETE_EVENT_API = "http://localhost:8080/events";
 const CATEGORY_API = "http://localhost:8080/categories/all";
+const CITY_API = "http://localhost:8080/cities/all";
 
 const statusOptions = [
   { value: "Upcoming", label: "Upcoming" },
@@ -39,20 +38,22 @@ const Events = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [events, setEvents] = useState([]);
   const [categories, setCategories] = useState([]);
+  const [cities, setCities] = useState([]);
   const [modalOpen, setModalOpen] = useState(false);
   const [newEvent, setNewEvent] = useState({
     eventName: "",
     description: "",
     eventDateTime: "",
-    location: "",
     organizer: "",
     category: { id: "" },
+    city: { cityid: "" }, // Ensure city is initialized
     capacity: 0,
     registrationFee: 0.0,
     status: "",
     contactEmail: "",
     contactPhone: "",
   });
+
   const [editMode, setEditMode] = useState(false);
   const [editEventId, setEditEventId] = useState(null);
   const [snackbarOpen, setSnackbarOpen] = useState(false);
@@ -90,33 +91,39 @@ const Events = () => {
     fetchCategories();
   }, []);
 
+  useEffect(() => {
+    const fetchCities = async () => {
+      try {
+        const response = await axios.get(CITY_API);
+        setCities(response.data);
+      } catch (error) {
+        console.error("Error fetching cities:", error);
+        setSnackbarMessage("Could not fetch cities. Please try again later.");
+        setSnackbarOpen(true);
+      }
+    };
+    fetchCities();
+  }, []);
+
   const handleCreateEvent = () => {
     setModalOpen(true);
     setEditMode(false);
-    setNewEvent({
-      eventName: "",
-      description: "",
-      eventDateTime: "",
-      location: "",
-      organizer: "",
-      category: { id: "" },
-      capacity: 0,
-      registrationFee: 0.0,
-      status: "",
-      contactEmail: "",
-      contactPhone: "",
-    });
+    resetEventForm();
   };
 
   const handleModalClose = () => {
     setModalOpen(false);
+    resetEventForm();
+  };
+
+  const resetEventForm = () => {
     setNewEvent({
       eventName: "",
       description: "",
       eventDateTime: "",
-      location: "",
       organizer: "",
       category: { id: "" },
+      city: { cityid: "" }, // Reset city to ensure it's initialized
       capacity: 0,
       registrationFee: 0.0,
       status: "",
@@ -136,6 +143,15 @@ const Events = () => {
     setNewEvent((prev) => ({ ...prev, category: { id: selectedCategoryId } }));
   };
 
+  const handleCityChange = (event) => {
+    const selectedCityId = event.target.value;
+    const selectedCity = cities.find((city) => city.cityid === selectedCityId);
+    setNewEvent((prev) => ({
+      ...prev,
+      city: selectedCity ? { cityid: selectedCity.cityid } : { cityid: "" }, // Ensure city is always defined
+    }));
+  };
+
   const isEmailValid = (email) => {
     const regex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     return regex.test(email);
@@ -148,7 +164,6 @@ const Events = () => {
       !newEvent.category.id ||
       !newEvent.description ||
       !newEvent.eventDateTime ||
-      !newEvent.location ||
       !newEvent.organizer ||
       !newEvent.contactEmail ||
       !newEvent.contactPhone ||
@@ -156,9 +171,7 @@ const Events = () => {
       !newEvent.capacity ||
       !newEvent.registrationFee
     ) {
-      setSnackbarMessage(
-        "Event Name, Category, Description, EventDateTime, Location, Organizer, Contact Email, Contact Phone, Status, Capacity, Registration Fee are required."
-      );
+      setSnackbarMessage("All fields are required.");
       setSnackbarOpen(true);
       return;
     }
@@ -205,7 +218,7 @@ const Events = () => {
   };
 
   const handleEdit = (event) => {
-    setNewEvent({ ...event });
+    setNewEvent({ ...event, city: { cityid: event.city.cityid } });
     setEditEventId(event.eventId);
     setEditMode(true);
     setModalOpen(true);
@@ -283,10 +296,10 @@ const Events = () => {
                     {new Date(event.eventDateTime).toLocaleString()}
                   </Typography>
                   <Typography variant="body2">
-                    <strong>Location:</strong> {event.location}
+                    <strong>Organizer:</strong> {event.organizer}
                   </Typography>
                   <Typography variant="body2">
-                    <strong>Organizer:</strong> {event.organizer}
+                    <strong>City:</strong> {event.city.cityName}
                   </Typography>
                   <Typography variant="body2">
                     <strong>Category:</strong> {event.category.name}
@@ -332,7 +345,7 @@ const Events = () => {
           </Typography>
           <br />
           <Grid container spacing={2}>
-            <Grid item xs={4}>
+            <Grid item xs={4} sx={{ marginTop: "1em" }}>
               <TextField
                 label="Event Name"
                 value={newEvent.eventName}
@@ -343,7 +356,7 @@ const Events = () => {
                 onChange={handleInputChange}
               />
             </Grid>
-            <Grid item xs={4}>
+            <Grid item xs={4} sx={{ marginTop: "1em" }}>
               <TextField
                 label="Description"
                 value={newEvent.description}
@@ -355,8 +368,8 @@ const Events = () => {
               />
             </Grid>
             <Grid item xs={4}>
+              <Typography>Event Date and Time</Typography>
               <TextField
-                label="Event Date & Time"
                 type="datetime-local"
                 value={newEvent.eventDateTime}
                 name="eventDateTime"
@@ -364,18 +377,7 @@ const Events = () => {
                 onChange={handleInputChange}
               />
             </Grid>
-            <Grid item xs={4}>
-              <TextField
-                label="Location"
-                value={newEvent.location}
-                size="small"
-                variant="outlined"
-                name="location"
-                fullWidth
-                onChange={handleInputChange}
-              />
-            </Grid>
-            <Grid item xs={4}>
+            <Grid item xs={4} sx={{ marginTop: "1em" }}>
               <TextField
                 label="Organizer"
                 value={newEvent.organizer}
@@ -388,7 +390,7 @@ const Events = () => {
             </Grid>
             <Grid item xs={4}>
               <FormControl fullWidth variant="outlined" size="small">
-                <InputLabel>Category</InputLabel>
+                <Typography>Category</Typography>
                 <Select
                   value={newEvent.category.id}
                   onChange={handleCategoryChange}
@@ -402,6 +404,21 @@ const Events = () => {
               </FormControl>
             </Grid>
             <Grid item xs={4}>
+              <FormControl fullWidth variant="outlined" size="small">
+                <Typography>City</Typography>
+                <Select
+                  value={newEvent.city.cityid}
+                  onChange={handleCityChange}
+                >
+                  {cities.map((city) => (
+                    <MenuItem key={city.cityid} value={city.cityid}>
+                      {city.cityName}
+                    </MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+            </Grid>
+            <Grid item xs={4} sx={{ marginTop: "1em" }}>
               <TextField
                 label="Capacity"
                 type="number"
@@ -413,7 +430,7 @@ const Events = () => {
                 onChange={handleInputChange}
               />
             </Grid>
-            <Grid item xs={4}>
+            <Grid item xs={4} sx={{ marginTop: "1em" }}>
               <TextField
                 label="Registration Fee"
                 type="number"
@@ -427,7 +444,7 @@ const Events = () => {
             </Grid>
             <Grid item xs={4}>
               <FormControl fullWidth variant="outlined" size="small">
-                <InputLabel>Status</InputLabel>
+                <Typography>Status</Typography>
                 <Select
                   name="status"
                   value={newEvent.status}

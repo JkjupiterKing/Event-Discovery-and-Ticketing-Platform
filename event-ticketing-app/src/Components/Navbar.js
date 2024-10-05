@@ -17,6 +17,8 @@ import EventNoteIcon from "@mui/icons-material/EventNote";
 import AccountCircleIcon from "@mui/icons-material/AccountCircle";
 import ExitToAppIcon from "@mui/icons-material/ExitToApp";
 import MenuIcon from "@mui/icons-material/Menu";
+import PlaceIcon from "@mui/icons-material/Place"; // Import for City Management
+import CategoryIcon from "@mui/icons-material/Category"; // Import for Category Management
 import { styled } from "@mui/system";
 
 const StyledAppBar = styled(AppBar)({
@@ -111,9 +113,19 @@ const Navbar = () => {
               sx={{ pr: 7 }}
             >
               <ListItemIcon>
-                <EventNoteIcon />
+                <CategoryIcon /> {/* Icon for Category Management */}
               </ListItemIcon>
               <ListItemText primary="Category Management" />
+            </ListItem>
+            <ListItem
+              button
+              onClick={() => navigate("/city-management")}
+              sx={{ pr: 7 }}
+            >
+              <ListItemIcon>
+                <PlaceIcon /> {/* Icon for City Management */}
+              </ListItemIcon>
+              <ListItemText primary="City Management" />
             </ListItem>
           </List>
         </StyledDrawer>

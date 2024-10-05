@@ -75,7 +75,7 @@ public class EventController {
         eventToUpdate.setEventName(eventDetails.getEventName());
         eventToUpdate.setDescription(eventDetails.getDescription());
         eventToUpdate.setEventDateTime(eventDetails.getEventDateTime());
-        eventToUpdate.setLocation(eventDetails.getLocation());
+        eventToUpdate.setCity(eventDetails.getCity());
         eventToUpdate.setOrganizer(eventDetails.getOrganizer());
 
         // Fetch category by ID and update the event's category

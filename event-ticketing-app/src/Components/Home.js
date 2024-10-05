@@ -17,20 +17,34 @@ import CloseIcon from "@mui/icons-material/Close";
 
 const items = [
   {
-    img: "https://assets-in.bmscdn.com/promotions/cms/creatives/1727851263413_techroastshowweb.jpg",
-    alt: "Tech Roast Show",
+    img: `${process.env.PUBLIC_URL}/Movies.jpg`,
+    title: "Cinema Under the Stars",
+    description:
+      "Join us for an unforgettable outdoor movie experience featuring classic and contemporary films. Enjoy a cozy atmosphere with friends and family, along with delicious snacks under the starry sky.",
   },
   {
-    img: "https://assets-in.bmscdn.com/promotions/cms/creatives/1726036566435_playcardnewweb.jpg",
-    alt: "Play Card",
+    img: `${process.env.PUBLIC_URL}/Plays.jpg`,
+    title: "Theater of Dreams",
+    description:
+      "Immerse yourself in captivating performances with our selection of theatrical productions. From timeless classics to modern masterpieces, experience the magic of live theater with talented actors on stage.",
   },
   {
-    img: "https://assets-in.bmscdn.com/promotions/cms/creatives/1727710500223_lollapaloozaindia2025web.jpg",
-    alt: "Lollapalooza India 2025",
+    img: `${process.env.PUBLIC_URL}/Events.jpg`,
+    title: "Community Connect",
+    description:
+      "Be a part of our vibrant community events, where connections are made and memories are created. Join us for workshops, festivals, and gatherings that celebrate culture, creativity, and togetherness.",
   },
   {
-    img: "https://assets-in.bmscdn.com/promotions/cms/creatives/1727713083120_sunidhiweb.jpg",
-    alt: "Sunidhi Chauhan Concert",
+    img: `${process.env.PUBLIC_URL}/Activities.jpg`,
+    title: "Adventure Awaits",
+    description:
+      "Explore exciting activities for all ages, from thrilling outdoor adventures to creative workshops. Whether you're seeking adrenaline or artistry, there's something for everyone to enjoy!",
+  },
+  {
+    img: `${process.env.PUBLIC_URL}/Sports.jpg`,
+    title: "Game On!",
+    description:
+      "Get ready for action-packed sports events featuring local teams and thrilling competitions. Cheer for your favorites and experience the excitement of live sports, from football to basketball and more!",
   },
 ];
 
@@ -38,7 +52,7 @@ const Home = () => {
   const [eventItems, setEventItems] = useState([]);
   const [startIndex, setStartIndex] = useState(0);
   const itemsPerPage = 5;
-  const [selectedEvent, setSelectedEvent] = useState(null); // State for selected event
+  const [selectedEvent, setSelectedEvent] = useState(null);
 
   useEffect(() => {
     const fetchEvents = async () => {
@@ -66,26 +80,17 @@ const Home = () => {
   };
 
   const handleCardClick = (event) => {
-    setSelectedEvent(event); // Set selected event to show details
+    setSelectedEvent(event);
   };
 
   const handleCloseModal = () => {
-    setSelectedEvent(null); // Close modal
+    setSelectedEvent(null);
   };
 
   return (
     <main>
       <header>
         <Navbar />
-        <img
-          src="images/bars.svg"
-          alt="Open Menu"
-          id="menu_toggle"
-          onClick={() => {
-            const header = document.querySelector("header");
-            header.classList.toggle("showMenu");
-          }}
-        />
       </header>
 
       <Box sx={{ padding: 2 }}>
@@ -95,25 +100,48 @@ const Home = () => {
           indicators={true}
           navButtonsAlwaysVisible={true}
           cycleNavigation
+          sx={{ height: 300 }}
         >
           {items.map((item, index) => (
-            <a
-              href={item.link}
+            <Box
               key={index}
-              target="_blank"
-              rel="noopener noreferrer"
+              sx={{
+                position: "relative",
+                height: "100%",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+              }}
             >
               <Box
                 component="img"
                 src={item.img}
-                alt={item.alt}
+                alt={item.title} // Accessibility improvement
                 sx={{
                   borderRadius: "4px",
                   width: "100%",
-                  height: "auto",
+                  height: "100%",
+                  objectFit: "cover",
                 }}
               />
-            </a>
+              <Box
+                sx={{
+                  position: "absolute",
+                  bottom: 16,
+                  left: 16,
+                  color: "white",
+                  backgroundColor: "rgba(0, 0, 0, 0.5)",
+                  padding: 1,
+                  borderRadius: 1,
+                  maxWidth: "80%",
+                }}
+              >
+                <Typography variant="h5" sx={{ marginBottom: 1 }}>
+                  {item.title}
+                </Typography>
+                <Typography variant="body2">{item.description}</Typography>
+              </Box>
+            </Box>
           ))}
         </Carousel>
       </Box>
@@ -145,6 +173,7 @@ const Home = () => {
                 <CardContent>
                   <Typography variant="h6">{item.eventName}</Typography>
                   <Typography variant="body2">{item.description}</Typography>
+                  <Typography variant="body2">{item.city.cityName}</Typography>
                 </CardContent>
               </Card>
             ))}
@@ -214,7 +243,7 @@ const Home = () => {
                 {new Date(selectedEvent.eventDateTime).toLocaleString()}
               </Typography>
               <Typography variant="body1">
-                <strong>Location:</strong> {selectedEvent.location}
+                <strong>Location:</strong> {selectedEvent.city.cityName}
               </Typography>
               <Typography variant="body1">
                 <strong>Organizer:</strong> {selectedEvent.organizer}
