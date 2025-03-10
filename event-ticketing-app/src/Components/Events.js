@@ -203,10 +203,12 @@ const Events = () => {
               : event
           )
         );
+        window.location.reload();
       } else {
         const response = await axios.post(ADD_EVENT_API, newEvent);
         setSnackbarMessage("Event added successfully!");
         setEvents((prev) => [...prev, response.data]);
+        window.location.reload();
       }
       handleModalClose();
     } catch (error) {

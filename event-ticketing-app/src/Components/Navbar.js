@@ -19,6 +19,8 @@ import ExitToAppIcon from "@mui/icons-material/ExitToApp";
 import MenuIcon from "@mui/icons-material/Menu";
 import PlaceIcon from "@mui/icons-material/Place"; // Import for City Management
 import CategoryIcon from "@mui/icons-material/Category"; // Import for Category Management
+import CloseIcon from "@mui/icons-material/Close"; // Import for Close Icon
+import PersonIcon from "@mui/icons-material/Person"; // Icon for Student Management
 import { styled } from "@mui/system";
 
 const StyledAppBar = styled(AppBar)({
@@ -94,6 +96,14 @@ const Navbar = () => {
           open={drawerOpen}
           onClose={toggleDrawer(false)}
         >
+          <div style={{ padding: 16 }}>
+            <IconButton
+              onClick={toggleDrawer(false)}
+              style={{ color: "#FAF7F0" }}
+            >
+              <CloseIcon />
+            </IconButton>
+          </div>
           <List>
             <ListItem button onClick={() => navigate("/home")} sx={{ pr: 7 }}>
               <ListItemIcon>
