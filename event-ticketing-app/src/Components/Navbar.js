@@ -137,6 +137,16 @@ const Navbar = () => {
               </ListItemIcon>
               <ListItemText primary="City Management" />
             </ListItem>
+            <ListItem
+              button
+              onClick={() => navigate("/Student-Management")}
+              sx={{ pr: 7 }}
+            >
+              <ListItemIcon>
+                <PersonIcon /> {/* Icon for Student Management */}
+              </ListItemIcon>
+              <ListItemText primary="Student Management" />
+            </ListItem>
           </List>
         </StyledDrawer>
         <div>

@@ -8,6 +8,7 @@ import Profile from "./Components/Profile";
 import Events from "./Components/Events";
 import Categorymanagement from "./Components/CategoryManagement";
 import CityManagement from "./Components/CityManagement";
+import StudentManagement from "./Components/StudentManagement";
 
 const App = () => {
   return (
@@ -22,6 +23,7 @@ const App = () => {
         <Route path="/events" element={<Events />} />
         <Route path="/category-management" element={<Categorymanagement />} />
         <Route path="/City-Management" element={<CityManagement />} />
+        <Route path="/Student-Management" element={<StudentManagement />} />
       </Routes>
     </div>
   );

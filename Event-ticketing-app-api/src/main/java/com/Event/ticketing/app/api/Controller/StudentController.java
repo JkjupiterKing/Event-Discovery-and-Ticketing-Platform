@@ -103,3 +103,4 @@ public class StudentController {
         return ResponseEntity.ok("Student deleted successfully.");
     }
 }
+
