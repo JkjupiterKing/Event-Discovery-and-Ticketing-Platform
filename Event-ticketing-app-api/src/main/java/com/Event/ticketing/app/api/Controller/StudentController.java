@@ -45,7 +45,7 @@ public class StudentController {
         return ResponseEntity.ok("Student created successfully.");
     }
 
-    @PostMapping("/login")
+    @PostMapping("/Studentlogin")
     public ResponseEntity<Student> login(@RequestBody Student student) {
         Optional<Student> existingStudentOpt = Optional.ofNullable(studentRepository.findByEmail(student.getEmail()));
 

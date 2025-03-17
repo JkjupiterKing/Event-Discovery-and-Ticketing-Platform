@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   AppBar,
   Toolbar,
@@ -22,6 +22,7 @@ import CategoryIcon from "@mui/icons-material/Category"; // Import for Category 
 import CloseIcon from "@mui/icons-material/Close"; // Import for Close Icon
 import PersonIcon from "@mui/icons-material/Person"; // Icon for Student Management
 import { styled } from "@mui/system";
+import AssignmentIcon from "@mui/icons-material/Assignment"; // Icon for Registered Events
 
 const StyledAppBar = styled(AppBar)({
   background: "linear-gradient(to right, #D5006D, #FF6F20)",
@@ -58,9 +59,22 @@ const StyledDrawer = styled(Drawer)({
 const Navbar = () => {
   const navigate = useNavigate();
   const [drawerOpen, setDrawerOpen] = useState(false);
+  const [role, setRole] = useState("");
+
+  // Check role from local storage when component mounts
+  useEffect(() => {
+    const storedRole = localStorage.getItem("role");
+    if (storedRole) {
+      setRole(storedRole); // Set role based on the localStorage
+    }
+  }, []);
 
   const handleLogout = () => {
+    // Remove both user and role from localStorage
     localStorage.removeItem("user");
+    localStorage.removeItem("role");
+
+    // Navigate to the login page after logout
     navigate("/login");
   };
 
@@ -105,58 +119,94 @@ const Navbar = () => {
             </IconButton>
           </div>
           <List>
-            <ListItem button onClick={() => navigate("/home")} sx={{ pr: 7 }}>
+            {/* Home link - for both Admin and Student */}
+            <ListItem
+              button
+              onClick={() =>
+                navigate(role === "admin" ? "/home" : "/Student-Home")
+              }
+              sx={{ pr: 7 }}
+            >
               <ListItemIcon>
                 <HomeIcon />
               </ListItemIcon>
               <ListItemText primary="Home" />
             </ListItem>
-            <ListItem button onClick={() => navigate("/events")} sx={{ pr: 7 }}>
-              <ListItemIcon>
-                <EventNoteIcon />
-              </ListItemIcon>
-              <ListItemText primary="Events Management" />
-            </ListItem>
+
+            {/* Show this for Admin only */}
+            {role === "admin" && (
+              <>
+                <ListItem
+                  button
+                  onClick={() => navigate("/events")}
+                  sx={{ pr: 7 }}
+                >
+                  <ListItemIcon>
+                    <EventNoteIcon />
+                  </ListItemIcon>
+                  <ListItemText primary="Events Management" />
+                </ListItem>
+                <ListItem
+                  button
+                  onClick={() => navigate("/category-management")}
+                  sx={{ pr: 7 }}
+                >
+                  <ListItemIcon>
+                    <CategoryIcon />
+                  </ListItemIcon>
+                  <ListItemText primary="Category Management" />
+                </ListItem>
+                <ListItem
+                  button
+                  onClick={() => navigate("/city-management")}
+                  sx={{ pr: 7 }}
+                >
+                  <ListItemIcon>
+                    <PlaceIcon />
+                  </ListItemIcon>
+                  <ListItemText primary="City Management" />
+                </ListItem>
+                <ListItem
+                  button
+                  onClick={() => navigate("/Student-Management")}
+                  sx={{ pr: 7 }}
+                >
+                  <ListItemIcon>
+                    <PersonIcon />
+                  </ListItemIcon>
+                  <ListItemText primary="Student Management" />
+                </ListItem>
+              </>
+            )}
+
+            {/* Register Events - Visible to both Admin and Student */}
             <ListItem
               button
-              onClick={() => navigate("/category-management")}
+              onClick={() =>
+                navigate(
+                  role === "admin" ? "/RegisterEvents" : "/RegisterEvents"
+                )
+              }
               sx={{ pr: 7 }}
             >
               <ListItemIcon>
-                <CategoryIcon /> {/* Icon for Category Management */}
+                <AssignmentIcon />
               </ListItemIcon>
-              <ListItemText primary="Category Management" />
-            </ListItem>
-            <ListItem
-              button
-              onClick={() => navigate("/city-management")}
-              sx={{ pr: 7 }}
-            >
-              <ListItemIcon>
-                <PlaceIcon /> {/* Icon for City Management */}
-              </ListItemIcon>
-              <ListItemText primary="City Management" />
-            </ListItem>
-            <ListItem
-              button
-              onClick={() => navigate("/Student-Management")}
-              sx={{ pr: 7 }}
-            >
-              <ListItemIcon>
-                <PersonIcon /> {/* Icon for Student Management */}
-              </ListItemIcon>
-              <ListItemText primary="Student Management" />
+              <ListItemText primary="Registered Events" />
             </ListItem>
           </List>
         </StyledDrawer>
         <div>
-          <StyledButton
-            component={Link}
-            to="/profile"
-            startIcon={<AccountCircleIcon />}
-          >
-            Profile
-          </StyledButton>
+          {/* Show the Profile button only for Admin */}
+          {role === "admin" && (
+            <StyledButton
+              component={Link}
+              to="/profile"
+              startIcon={<AccountCircleIcon />}
+            >
+              Profile
+            </StyledButton>
+          )}
           <StyledButton onClick={handleLogout} startIcon={<ExitToAppIcon />}>
             Logout
           </StyledButton>

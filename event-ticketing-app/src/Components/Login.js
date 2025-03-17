@@ -25,25 +25,49 @@ const Login = () => {
 
   const handleLogin = async (e) => {
     e.preventDefault();
+
     try {
+      // Attempt login with the /users/login endpoint (for admin)
       const response = await axios.post("http://localhost:8080/users/login", {
         email,
         password,
       });
 
-      // Store user data in local storage
-      localStorage.setItem("user", JSON.stringify(response.data));
+      // If user is found, store user in local storage with 'admin' role and redirect to /home
+      const userData = response.data;
+      localStorage.setItem("user", JSON.stringify(userData));
+      localStorage.setItem("role", "admin");
 
       setSnackbarMessage("Login successful!");
       setSnackbarSeverity("success");
       setOpenSnackbar(true);
-
-      // Redirect to the dashboard after successful login
       navigate("/home");
     } catch (error) {
-      setSnackbarMessage("Invalid email or password.");
-      setSnackbarSeverity("error");
-      setOpenSnackbar(true);
+      // If user not found at /users/login, attempt to login with /students/Studentlogin (for student)
+      try {
+        const response = await axios.post(
+          "http://localhost:8080/students/Studentlogin",
+          {
+            email,
+            password,
+          }
+        );
+
+        // If student is found, store student in local storage with 'student' role and redirect to /studenthome
+        const studentData = response.data;
+        localStorage.setItem("student", JSON.stringify(studentData));
+        localStorage.setItem("role", "student");
+
+        setSnackbarMessage("Login successful!");
+        setSnackbarSeverity("success");
+        setOpenSnackbar(true);
+        navigate("/Student-Home");
+      } catch (error) {
+        // If both login attempts fail, show an error message
+        setSnackbarMessage("Invalid email or password.");
+        setSnackbarSeverity("error");
+        setOpenSnackbar(true);
+      }
     }
   };
 
