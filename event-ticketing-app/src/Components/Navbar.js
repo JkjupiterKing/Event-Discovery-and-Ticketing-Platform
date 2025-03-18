@@ -73,6 +73,7 @@ const Navbar = () => {
     // Remove both user and role from localStorage
     localStorage.removeItem("user");
     localStorage.removeItem("role");
+    localStorage.removeItem("student");
 
     // Navigate to the login page after logout
     navigate("/login");

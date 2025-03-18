@@ -80,9 +80,9 @@ const StudentHome = () => {
       const student = JSON.parse(localStorage.getItem("student"));
       if (student) {
         const registrationData = {
-          studentId: student.id,
-          eventId: event.eventId,
-          registrationDateTime: new Date().toISOString(),
+          student: { id: student.id }, // Using the student ID here
+          event: { eventId: event.eventId }, // Using the event ID here
+          registrationTime: new Date().toISOString(), // Current date-time
         };
 
         const response = await axios.post(
