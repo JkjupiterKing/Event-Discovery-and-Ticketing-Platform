@@ -17,34 +17,16 @@ import CloseIcon from "@mui/icons-material/Close";
 
 const items = [
   {
-    img: `${process.env.PUBLIC_URL}/Movies.jpg`,
-    title: "Cinema Under the Stars",
-    description:
-      "Join us for an unforgettable outdoor movie experience featuring classic and contemporary films. Enjoy a cozy atmosphere with friends and family, along with delicious snacks under the starry sky.",
-  },
-  {
-    img: `${process.env.PUBLIC_URL}/Plays.jpg`,
-    title: "Theater of Dreams",
-    description:
-      "Immerse yourself in captivating performances with our selection of theatrical productions. From timeless classics to modern masterpieces, experience the magic of live theater with talented actors on stage.",
-  },
-  {
-    img: `${process.env.PUBLIC_URL}/Events.jpg`,
-    title: "Community Connect",
-    description:
-      "Be a part of our vibrant community events, where connections are made and memories are created. Join us for workshops, festivals, and gatherings that celebrate culture, creativity, and togetherness.",
-  },
-  {
-    img: `${process.env.PUBLIC_URL}/Activities.jpg`,
-    title: "Adventure Awaits",
-    description:
-      "Explore exciting activities for all ages, from thrilling outdoor adventures to creative workshops. Whether you're seeking adrenaline or artistry, there's something for everyone to enjoy!",
-  },
-  {
     img: `${process.env.PUBLIC_URL}/Sports.jpg`,
-    title: "Game On!",
+    title: "JSS Polytechnic Sports",
     description:
       "Get ready for action-packed sports events featuring local teams and thrilling competitions. Cheer for your favorites and experience the excitement of live sports, from football to basketball and more!",
+  },
+  {
+    img: `${process.env.PUBLIC_URL}/Events.png`,
+    title: "JSS Polytechnic Cultural Events",
+    description:
+      "Be a part of our vibrant cultural events, where connections are made and memories are created. Join us for workshops, festivals, and gatherings that celebrate culture, creativity, and togetherness.",
   },
 ];
 
@@ -93,6 +75,7 @@ const Home = () => {
         <Navbar />
       </header>
 
+      {/* Carousel Section */}
       <Box sx={{ padding: 2 }}>
         <Carousel
           autoPlay
@@ -146,6 +129,7 @@ const Home = () => {
         </Carousel>
       </Box>
 
+      {/* Events Section */}
       <Box sx={{ padding: 2, backgroundColor: "#181C14", color: "white" }}>
         <Typography variant="h4" sx={{ marginBottom: 2 }}>
           All Events

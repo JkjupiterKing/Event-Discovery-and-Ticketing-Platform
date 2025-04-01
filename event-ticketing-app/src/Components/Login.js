@@ -61,7 +61,7 @@ const Login = () => {
         setSnackbarMessage("Login successful!");
         setSnackbarSeverity("success");
         setOpenSnackbar(true);
-        navigate("/Student-Home");
+        navigate("/home");
       } catch (error) {
         // If both login attempts fail, show an error message
         setSnackbarMessage("Invalid email or password.");

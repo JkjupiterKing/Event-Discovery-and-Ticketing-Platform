@@ -45,7 +45,7 @@ const StyledButton = styled(Button)({
 const LogoContainer = styled("div")({
   display: "flex",
   alignItems: "center",
-  marginRight: "50em",
+  marginRight: "48em",
 });
 
 // Optional: Create a styled drawer component
@@ -99,10 +99,10 @@ const Navbar = () => {
           <img
             src={`${process.env.PUBLIC_URL}/ticket.gif`}
             alt="Logo"
-            style={{ width: 40, marginRight: 4 }}
+            style={{ width: 40 }}
           />
           <Typography variant="h6" style={{ margin: 0 }}>
-            Event Ticketing
+            Event Registration
           </Typography>
         </LogoContainer>
 
@@ -123,9 +123,7 @@ const Navbar = () => {
             {/* Home link - for both Admin and Student */}
             <ListItem
               button
-              onClick={() =>
-                navigate(role === "admin" ? "/home" : "/Student-Home")
-              }
+              onClick={() => navigate(role === "admin" ? "/home" : "/home")}
               sx={{ pr: 7 }}
             >
               <ListItemIcon>
@@ -178,6 +176,20 @@ const Navbar = () => {
                   <ListItemText primary="Student Management" />
                 </ListItem>
               </>
+            )}
+
+            {/* Show this for Student only */}
+            {role === "student" && (
+              <ListItem
+                button
+                onClick={() => navigate("/Student-Home")}
+                sx={{ pr: 7 }}
+              >
+                <ListItemIcon>
+                  <EventNoteIcon />
+                </ListItemIcon>
+                <ListItemText primary="Events" />
+              </ListItem>
             )}
 
             {/* Register Events - Visible to both Admin and Student */}

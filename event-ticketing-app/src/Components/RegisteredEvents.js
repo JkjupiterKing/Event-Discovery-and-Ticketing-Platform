@@ -146,7 +146,7 @@ const RegisteredEvents = () => {
                     <strong>Description</strong>
                   </TableCell>
                   <TableCell>
-                    <strong>Date & Time</strong>
+                    <strong>Event Date & Time</strong>
                   </TableCell>
                   <TableCell>
                     <strong>Organizer</strong>
