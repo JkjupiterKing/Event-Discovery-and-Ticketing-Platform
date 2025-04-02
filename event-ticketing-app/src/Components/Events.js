@@ -25,7 +25,6 @@ const ADD_EVENT_API = "http://localhost:8080/events/addEvent";
 const UPDATE_EVENT_API = "http://localhost:8080/events";
 const DELETE_EVENT_API = "http://localhost:8080/events";
 const CATEGORY_API = "http://localhost:8080/categories/all";
-const CITY_API = "http://localhost:8080/cities/all";
 
 const statusOptions = [
   { value: "Upcoming", label: "Upcoming" },
@@ -38,7 +37,6 @@ const Events = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [events, setEvents] = useState([]);
   const [categories, setCategories] = useState([]);
-  const [cities, setCities] = useState([]);
   const [modalOpen, setModalOpen] = useState(false);
   const [newEvent, setNewEvent] = useState({
     eventName: "",
@@ -46,7 +44,6 @@ const Events = () => {
     eventDateTime: "",
     organizer: "",
     category: { id: "" },
-    city: { cityid: "" }, // Ensure city is initialized
     capacity: 0,
     registrationFee: 0.0,
     status: "",
@@ -91,20 +88,6 @@ const Events = () => {
     fetchCategories();
   }, []);
 
-  useEffect(() => {
-    const fetchCities = async () => {
-      try {
-        const response = await axios.get(CITY_API);
-        setCities(response.data);
-      } catch (error) {
-        console.error("Error fetching cities:", error);
-        setSnackbarMessage("Could not fetch cities. Please try again later.");
-        setSnackbarOpen(true);
-      }
-    };
-    fetchCities();
-  }, []);
-
   const handleCreateEvent = () => {
     setModalOpen(true);
     setEditMode(false);
@@ -123,7 +106,6 @@ const Events = () => {
       eventDateTime: "",
       organizer: "",
       category: { id: "" },
-      city: { cityid: "" }, // Reset city to ensure it's initialized
       capacity: 0,
       registrationFee: 0.0,
       status: "",
@@ -141,15 +123,6 @@ const Events = () => {
   const handleCategoryChange = (event) => {
     const selectedCategoryId = event.target.value;
     setNewEvent((prev) => ({ ...prev, category: { id: selectedCategoryId } }));
-  };
-
-  const handleCityChange = (event) => {
-    const selectedCityId = event.target.value;
-    const selectedCity = cities.find((city) => city.cityid === selectedCityId);
-    setNewEvent((prev) => ({
-      ...prev,
-      city: selectedCity ? { cityid: selectedCity.cityid } : { cityid: "" }, // Ensure city is always defined
-    }));
   };
 
   const isEmailValid = (email) => {
@@ -220,7 +193,7 @@ const Events = () => {
   };
 
   const handleEdit = (event) => {
-    setNewEvent({ ...event, city: { cityid: event.city.cityid } });
+    setNewEvent({ ...event });
     setEditEventId(event.eventId);
     setEditMode(true);
     setModalOpen(true);
@@ -294,14 +267,11 @@ const Events = () => {
                   <Typography variant="body2">{event.description}</Typography>
                   <br />
                   <Typography variant="body2">
-                    <strong>Date & Time:</strong>{" "}
+                    <strong>Event Date & Time:</strong>{" "}
                     {new Date(event.eventDateTime).toLocaleString()}
                   </Typography>
                   <Typography variant="body2">
                     <strong>Organizer:</strong> {event.organizer}
-                  </Typography>
-                  <Typography variant="body2">
-                    <strong>City:</strong> {event.city.cityName}
                   </Typography>
                   <Typography variant="body2">
                     <strong>Category:</strong> {event.category.name}
@@ -331,6 +301,7 @@ const Events = () => {
             ))}
         </Box>
       </Container>
+
       {/* Modal for adding/updating an event */}
       <Modal open={modalOpen} onClose={handleModalClose}>
         <div
@@ -405,21 +376,6 @@ const Events = () => {
                 </Select>
               </FormControl>
             </Grid>
-            <Grid item xs={4}>
-              <FormControl fullWidth variant="outlined" size="small">
-                <Typography>City</Typography>
-                <Select
-                  value={newEvent.city.cityid}
-                  onChange={handleCityChange}
-                >
-                  {cities.map((city) => (
-                    <MenuItem key={city.cityid} value={city.cityid}>
-                      {city.cityName}
-                    </MenuItem>
-                  ))}
-                </Select>
-              </FormControl>
-            </Grid>
             <Grid item xs={4} sx={{ marginTop: "1em" }}>
               <TextField
                 label="Capacity"
@@ -483,58 +439,26 @@ const Events = () => {
               />
             </Grid>
           </Grid>
-          <Button
-            variant="contained"
-            color="secondary"
-            onClick={handleSubmit}
-            style={{ marginTop: "16px" }}
-          >
-            {editMode ? "Update" : "Add"}
-          </Button>
-        </div>
-      </Modal>
-      <Modal open={confirmationOpen} onClose={() => setConfirmationOpen(false)}>
-        <div
-          style={{
-            padding: 20,
-            backgroundColor: "white",
-            margin: "100px auto",
-            width: "400px",
-            borderRadius: "8px",
-          }}
-        >
-          <Typography variant="h6">Confirm Deletion</Typography>
-          <Typography>Are you sure you want to delete this event?</Typography>
-          <Box
-            sx={{
-              display: "flex",
-              justifyContent: "flex-end",
-              marginTop: "1em",
-            }}
-          >
-            <Button onClick={() => setConfirmationOpen(false)} color="inherit">
+          <Box mt={2} display="flex" justifyContent="space-between">
+            <Button
+              variant="outlined"
+              onClick={handleModalClose}
+              color="primary"
+            >
               Cancel
             </Button>
-            <Button
-              onClick={handleDelete}
-              variant="contained"
-              color="secondary"
-              sx={{ marginLeft: "0.5em" }}
-            >
-              Confirm
+            <Button variant="contained" color="primary" onClick={handleSubmit}>
+              {editMode ? "Update Event" : "Create Event"}
             </Button>
           </Box>
         </div>
       </Modal>
+
+      {/* Snackbar for feedback */}
       <Snackbar
         open={snackbarOpen}
         autoHideDuration={6000}
         onClose={handleSnackbarClose}
-        anchorOrigin={{ vertical: "bottom", horizontal: "left" }}
-        sx={{
-          color: "white",
-          width: "auto",
-        }}
       >
         <MuiAlert
           onClose={handleSnackbarClose}
@@ -544,6 +468,41 @@ const Events = () => {
           {snackbarMessage}
         </MuiAlert>
       </Snackbar>
+
+      {/* Confirmation Dialog for Delete */}
+      <Modal open={confirmationOpen} onClose={() => setConfirmationOpen(false)}>
+        <div
+          style={{
+            padding: "20px",
+            backgroundColor: "white",
+            width: "400px",
+            margin: "200px auto",
+            borderRadius: "8px",
+            textAlign: "center",
+          }}
+        >
+          <Typography variant="h6">
+            Are you sure you want to delete this event?
+          </Typography>
+          <Box mt={2} display="flex" justifyContent="center">
+            <Button
+              variant="outlined"
+              color="primary"
+              sx={{ marginRight: 2 }}
+              onClick={() => setConfirmationOpen(false)}
+            >
+              Cancel
+            </Button>
+            <Button
+              variant="contained"
+              color="secondary"
+              onClick={handleDelete}
+            >
+              Delete
+            </Button>
+          </Box>
+        </div>
+      </Modal>
     </>
   );
 };

@@ -17,6 +17,7 @@ import {
   DialogTitle,
 } from "@mui/material";
 import axios from "axios";
+import { jsPDF } from "jspdf"; // Import jsPDF for PDF generation
 import Navbar from "./Navbar";
 
 const RegisteredEvents = () => {
@@ -31,34 +32,16 @@ const RegisteredEvents = () => {
     const fetchRegisteredEvents = async () => {
       setLoading(true);
       try {
-        // Get the role from localStorage
-        const role = localStorage.getItem("role"); // Assuming the role is stored directly in localStorage
-        if (role) {
-          setRole(role); // Store the role in state for later use
+        // Fetch all registered events from the API
+        const apiUrl = "http://localhost:8080/registered-events/all";
+        const response = await axios.get(apiUrl);
 
-          let apiUrl = "";
-          if (role === "student") {
-            // If the role is student, fetch the events for the student
-            const student = JSON.parse(localStorage.getItem("student"));
-            if (student && student.id) {
-              apiUrl = `http://localhost:8080/registered-events/student/${student.id}`;
-            }
-          } else if (role === "admin") {
-            // If the role is admin, fetch all events
-            apiUrl = "http://localhost:8080/registered-events/all";
-          }
+        // Check if response data is an array or an object and handle accordingly
+        const responseData = Array.isArray(response.data)
+          ? response.data // If the response is an array, use it directly
+          : [response.data]; // If it's a single object, wrap it in an array
 
-          if (apiUrl) {
-            const response = await axios.get(apiUrl);
-
-            // Check if response data is an array or an object and handle accordingly
-            const responseData = Array.isArray(response.data)
-              ? response.data // If the response is an array, use it directly
-              : [response.data]; // If it's a single object, wrap it in an array
-
-            setEvents(responseData); // Set the events state
-          }
-        }
+        setEvents(responseData); // Set the events state
       } catch (error) {
         console.error("Error fetching registered events:", error);
       } finally {
@@ -110,6 +93,82 @@ const RegisteredEvents = () => {
     setOpenDialog(false); // Close the confirmation dialog without deleting
   };
 
+  // Function to generate PDF and handle print functionality
+  const handlePrint = () => {
+    const doc = new jsPDF();
+
+    // Set title
+    doc.setFontSize(16);
+    doc.setFont("helvetica", "bold");
+    doc.text("Registered Events", 14, 22);
+
+    // Prepare data for transposed table
+    const headers = [
+      "Event Name",
+      "Event Date & Time",
+      "Category",
+      "Student Name",
+    ];
+    const data = filteredEvents.map((registration) => [
+      registration.event.eventName,
+      new Date(registration.event.eventDateTime).toLocaleString(),
+      registration.event.category.name,
+      registration.student.firstName,
+    ]);
+
+    // Set table dimensions
+    const startX = 14;
+    const startY = 30;
+    const rowHeight = 10;
+    const columnWidths = [
+      60, // Event Name
+      60, // Event Date & Time
+      40, // Category
+      40, // Student Name
+    ];
+
+    // Draw table headers
+    let xPosition = startX;
+    headers.forEach((header, index) => {
+      doc.setFont("helvetica", "normal");
+      doc.setTextColor(255, 255, 255);
+      doc.setFillColor(0, 0, 0); // Black background for header
+      doc.rect(
+        xPosition,
+        startY - rowHeight,
+        columnWidths[index],
+        rowHeight,
+        "F"
+      );
+      doc.setTextColor(255, 255, 255);
+      doc.text(header, xPosition + 2, startY - rowHeight + 6);
+      xPosition += columnWidths[index];
+    });
+
+    // Draw table rows
+    let yPosition = startY;
+    data.forEach((row) => {
+      xPosition = startX;
+      row.forEach((cell, index) => {
+        doc.setFont("helvetica", "normal");
+        doc.setTextColor(0, 0, 0);
+        doc.rect(xPosition, yPosition, columnWidths[index], rowHeight);
+        doc.text(cell, xPosition + 2, yPosition + 6);
+        xPosition += columnWidths[index];
+      });
+      yPosition += rowHeight;
+
+      // Add a new page if the content exceeds the page height
+      if (yPosition > 260) {
+        doc.addPage();
+        yPosition = startY;
+      }
+    });
+
+    // Save the PDF
+    doc.save("registered-events.pdf");
+  };
+
   return (
     <main>
       <header>
@@ -131,37 +190,44 @@ const RegisteredEvents = () => {
           />
         </Box>
 
+        {/* Print Button */}
+        <Box sx={{ marginBottom: 2 }}>
+          <Button variant="contained" color="primary" onClick={handlePrint}>
+            Print Events (PDF)
+          </Button>
+        </Box>
+
         {/* Table of registered events */}
         {loading ? (
           <Typography>Loading events...</Typography>
         ) : (
           <TableContainer component={Paper}>
-            <Table>
+            <Table id="events-table">
               <TableHead>
                 <TableRow>
                   <TableCell>
                     <strong>Event Name</strong>
                   </TableCell>
                   <TableCell>
-                    <strong>Description</strong>
-                  </TableCell>
-                  <TableCell>
                     <strong>Event Date & Time</strong>
-                  </TableCell>
-                  <TableCell>
-                    <strong>Organizer</strong>
-                  </TableCell>
-                  <TableCell>
-                    <strong>City</strong>
                   </TableCell>
                   <TableCell>
                     <strong>Category</strong>
                   </TableCell>
                   <TableCell>
-                    <strong>Registration Time</strong>
+                    <strong>Student Name</strong>
                   </TableCell>
                   <TableCell>
-                    <strong>Student Name</strong>
+                    <strong>Branch</strong>
+                  </TableCell>
+                  <TableCell>
+                    <strong>Semester</strong>
+                  </TableCell>
+                  <TableCell>
+                    <strong>Year</strong>
+                  </TableCell>
+                  <TableCell>
+                    <strong>Registration Time</strong>
                   </TableCell>
                   {/* If the role is admin, show a delete column */}
                   {role === "admin" && (
@@ -175,20 +241,19 @@ const RegisteredEvents = () => {
                 {filteredEvents.map((registration) => (
                   <TableRow key={registration.id}>
                     <TableCell>{registration.event.eventName}</TableCell>
-                    <TableCell>{registration.event.description}</TableCell>
                     <TableCell>
                       {new Date(
                         registration.event.eventDateTime
                       ).toLocaleString()}
                     </TableCell>
-                    <TableCell>{registration.event.organizer}</TableCell>
-                    <TableCell>{registration.event.city.cityName}</TableCell>
                     <TableCell>{registration.event.category.name}</TableCell>
+                    <TableCell>{registration.student.firstName}</TableCell>
+                    <TableCell>{registration.student.branch}</TableCell>
+                    <TableCell>{registration.student.semester}</TableCell>
+                    <TableCell>{registration.student.year}</TableCell>
                     <TableCell>
                       {new Date(registration.registrationTime).toLocaleString()}
                     </TableCell>
-                    <TableCell>{registration.student.firstName}</TableCell>
-
                     {/* If the role is admin, display a delete button */}
                     {role === "admin" && (
                       <TableCell>

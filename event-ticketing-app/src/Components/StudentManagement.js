@@ -16,6 +16,7 @@ import {
   TablePagination,
   Box,
   IconButton,
+  Grid,
 } from "@mui/material";
 import FirstPageIcon from "@mui/icons-material/FirstPage";
 import KeyboardArrowLeft from "@mui/icons-material/KeyboardArrowLeft";
@@ -93,6 +94,9 @@ const StudentManagement = () => {
     lastName: "",
     email: "",
     password: "",
+    semester: "",
+    branch: "",
+    year: "",
   });
   const [editStudent, setEditStudent] = useState(null);
   const [snackbarOpen, setSnackbarOpen] = useState(false);
@@ -124,21 +128,24 @@ const StudentManagement = () => {
       !newStudent.firstName ||
       !newStudent.lastName ||
       !newStudent.email ||
-      !newStudent.password
+      !newStudent.password ||
+      !newStudent.semester ||
+      !newStudent.branch ||
+      !newStudent.year
     ) {
-      setSnackbarMessage("Enter First Name, Last Name, Email, and Password");
+      setSnackbarMessage(
+        "Enter First Name, Last Name, Email, Password, Semester, Branch, and Year."
+      );
       setSnackbarOpen(true);
       return;
     }
 
     try {
       if (editStudent) {
-        await axios.put(`http://localhost:8080/students/${editStudent.id}`, {
-          firstName: newStudent.firstName,
-          lastName: newStudent.lastName,
-          email: newStudent.email,
-          password: newStudent.password,
-        });
+        await axios.put(
+          `http://localhost:8080/students/${editStudent.id}`,
+          newStudent
+        );
       } else {
         const response = await axios.post(
           "http://localhost:8080/students/create",
@@ -153,7 +160,15 @@ const StudentManagement = () => {
       }
 
       // Reset fields and close modal after successful operation
-      setNewStudent({ firstName: "", lastName: "", email: "", password: "" });
+      setNewStudent({
+        firstName: "",
+        lastName: "",
+        email: "",
+        password: "",
+        semester: "",
+        branch: "",
+        year: "",
+      });
       setModalOpen(false);
       setEditStudent(null);
       fetchStudents();
@@ -182,6 +197,9 @@ const StudentManagement = () => {
       lastName: student.lastName,
       email: student.email,
       password: student.password,
+      semester: student.semester,
+      branch: student.branch,
+      year: student.year,
     });
     setEditStudent(student);
     setModalOpen(true);
@@ -195,17 +213,28 @@ const StudentManagement = () => {
   const handleDeleteStudent = async () => {
     if (studentToDelete) {
       try {
-        await axios.delete(
-          `http://localhost:8080/students/${studentToDelete.id}`
+        // Sending DELETE request to the backend
+        const response = await axios.delete(
+          `http://localhost:8080/students/delete/${studentToDelete.id}`
         );
-        fetchStudents();
-        setSnackbarMessage("Student deleted successfully.");
+
+        // Check if the response is successful (status code 200)
+        if (response.status === 200) {
+          // Update the students list after successful deletion
+          fetchStudents();
+          setSnackbarMessage("Student deleted successfully.");
+          setSnackbarOpen(true);
+        } else {
+          // Handle the case when the deletion was not successful
+          setSnackbarMessage("Error deleting student.");
+          setSnackbarOpen(true);
+        }
       } catch (error) {
         console.error("Error deleting student:", error);
         setSnackbarMessage("Error deleting student.");
+        setSnackbarOpen(true);
       }
-      setDeleteConfirmationOpen(false);
-      setSnackbarOpen(true);
+      setDeleteConfirmationOpen(false); // Close the confirmation dialog
     }
   };
 
@@ -263,6 +292,9 @@ const StudentManagement = () => {
                 lastName: "",
                 email: "",
                 password: "",
+                semester: "",
+                branch: "",
+                year: "",
               });
             }}
           >
@@ -276,6 +308,9 @@ const StudentManagement = () => {
                 <TableCell>First Name</TableCell>
                 <TableCell>Last Name</TableCell>
                 <TableCell>Email</TableCell>
+                <TableCell>Semester</TableCell>
+                <TableCell>Branch</TableCell>
+                <TableCell>Year</TableCell>
                 <TableCell>Actions</TableCell>
               </TableRow>
             </TableHead>
@@ -291,6 +326,9 @@ const StudentManagement = () => {
                   <TableCell>{student.firstName}</TableCell>
                   <TableCell>{student.lastName}</TableCell>
                   <TableCell>{student.email}</TableCell>
+                  <TableCell>{student.semester}</TableCell>
+                  <TableCell>{student.branch}</TableCell>
+                  <TableCell>{student.year}</TableCell>
                   <TableCell>
                     <Button
                       color="primary"
@@ -318,7 +356,7 @@ const StudentManagement = () => {
               <TableRow>
                 <TablePagination
                   rowsPerPageOptions={[5, 10, 25, { label: "All", value: -1 }]}
-                  colSpan={4}
+                  colSpan={7}
                   count={filteredStudents.length}
                   rowsPerPage={rowsPerPage}
                   page={page}
@@ -330,7 +368,6 @@ const StudentManagement = () => {
             </TableFooter>
           </Table>
         </TableContainer>
-
         {/* Modal for adding/updating a student */}
         <Modal open={modalOpen} onClose={() => setModalOpen(false)}>
           <div
@@ -338,66 +375,109 @@ const StudentManagement = () => {
               padding: 20,
               backgroundColor: "white",
               margin: "100px auto",
-              width: "400px",
+              width: "500px", // Adjusted width for better layout
               borderRadius: "8px",
             }}
           >
             <Typography variant="h6">
               {editStudent ? "Update Student" : "Add New Student"}
             </Typography>
-            <TextField
-              label="First Name"
-              fullWidth
-              margin="normal"
-              variant="standard"
-              value={newStudent.firstName}
-              onChange={(e) =>
-                setNewStudent({ ...newStudent, firstName: e.target.value })
-              }
-            />
-            <TextField
-              label="Last Name"
-              fullWidth
-              margin="normal"
-              variant="standard"
-              value={newStudent.lastName}
-              onChange={(e) =>
-                setNewStudent({ ...newStudent, lastName: e.target.value })
-              }
-            />
-            <TextField
-              label="Email"
-              fullWidth
-              margin="normal"
-              variant="standard"
-              value={newStudent.email}
-              onChange={(e) =>
-                setNewStudent({ ...newStudent, email: e.target.value })
-              }
-            />
-            <TextField
-              label="Password"
-              fullWidth
-              margin="normal"
-              variant="standard"
-              type="password"
-              value={newStudent.password}
-              onChange={(e) =>
-                setNewStudent({ ...newStudent, password: e.target.value })
-              }
-            />
-            <br />
+
+            {/* Grid layout for form fields */}
+            <Grid container spacing={2}>
+              <Grid item xs={6}>
+                <TextField
+                  label="First Name"
+                  fullWidth
+                  variant="standard"
+                  value={newStudent.firstName}
+                  onChange={(e) =>
+                    setNewStudent({ ...newStudent, firstName: e.target.value })
+                  }
+                />
+              </Grid>
+              <Grid item xs={6}>
+                <TextField
+                  label="Last Name"
+                  fullWidth
+                  variant="standard"
+                  value={newStudent.lastName}
+                  onChange={(e) =>
+                    setNewStudent({ ...newStudent, lastName: e.target.value })
+                  }
+                />
+              </Grid>
+
+              <Grid item xs={6}>
+                <TextField
+                  label="Email"
+                  fullWidth
+                  variant="standard"
+                  value={newStudent.email}
+                  onChange={(e) =>
+                    setNewStudent({ ...newStudent, email: e.target.value })
+                  }
+                />
+              </Grid>
+              <Grid item xs={6}>
+                <TextField
+                  label="Password"
+                  fullWidth
+                  variant="standard"
+                  type="password"
+                  value={newStudent.password}
+                  onChange={(e) =>
+                    setNewStudent({ ...newStudent, password: e.target.value })
+                  }
+                />
+              </Grid>
+
+              <Grid item xs={6}>
+                <TextField
+                  label="Semester"
+                  fullWidth
+                  variant="standard"
+                  value={newStudent.semester}
+                  onChange={(e) =>
+                    setNewStudent({ ...newStudent, semester: e.target.value })
+                  }
+                />
+              </Grid>
+              <Grid item xs={6}>
+                <TextField
+                  label="Branch"
+                  fullWidth
+                  variant="standard"
+                  value={newStudent.branch}
+                  onChange={(e) =>
+                    setNewStudent({ ...newStudent, branch: e.target.value })
+                  }
+                />
+              </Grid>
+
+              <Grid item xs={6}>
+                <TextField
+                  label="Year"
+                  fullWidth
+                  variant="standard"
+                  value={newStudent.year}
+                  onChange={(e) =>
+                    setNewStudent({ ...newStudent, year: e.target.value })
+                  }
+                />
+              </Grid>
+            </Grid>
+
             <Button
               variant="contained"
               color="secondary"
               onClick={handleAddStudent}
+              sx={{ marginTop: "1em" }}
             >
               {editStudent ? "Update" : "Add"}
             </Button>
           </div>
         </Modal>
-
-        {/* Confirmation Modal for deleting a student */}
         <Modal
           open={deleteConfirmationOpen}
           onClose={() => setDeleteConfirmationOpen(false)}
@@ -407,39 +487,37 @@ const StudentManagement = () => {
               padding: 20,
               backgroundColor: "white",
               margin: "100px auto",
-              width: "400px",
+              width: "400px", // Adjusted width for delete confirmation modal
               borderRadius: "8px",
             }}
           >
-            <Typography variant="h6">Confirm Deletion</Typography>
-            <Typography>
-              Are you sure you want to delete this Student?
+            <Typography variant="h6">
+              Are you sure you want to delete this student?
             </Typography>
             <Box
               sx={{
-                display: "flex",
-                justifyContent: "flex-end",
                 marginTop: "1em",
+                display: "flex",
+                justifyContent: "space-between",
               }}
             >
               <Button
-                onClick={() => setDeleteConfirmationOpen(false)}
-                color="inherit"
+                variant="contained"
+                color="primary"
+                onClick={() => handleDeleteStudent()}
               >
-                Cancel
+                Delete
               </Button>
               <Button
-                onClick={handleDeleteStudent}
-                variant="contained"
+                variant="outlined"
                 color="secondary"
-                sx={{ marginLeft: "0.5em" }}
+                onClick={() => setDeleteConfirmationOpen(false)}
               >
-                Confirm
+                Cancel
               </Button>
             </Box>
           </div>
         </Modal>
-
         {/* Snackbar for notifications */}
         <Snackbar
           open={snackbarOpen}

@@ -24,10 +24,6 @@ public class Event {
     @Column(name = "event_date_time")
     private LocalDateTime eventDateTime;
 
-    @ManyToOne
-    @JoinColumn(name = "City_id")
-    private City city;
-
     private String organizer;
 
     @ManyToOne

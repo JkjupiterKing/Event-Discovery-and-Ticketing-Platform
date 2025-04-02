@@ -9,6 +9,7 @@ import {
   TextField,
   Snackbar,
   Alert,
+  Chip,
 } from "@mui/material";
 import Navbar from "./Navbar";
 import axios from "axios";
@@ -16,10 +17,9 @@ import "./Home.css";
 
 const StudentHome = () => {
   const [eventItems, setEventItems] = useState([]);
-  const [startIndex, setStartIndex] = useState(0);
+  const [categoryItems, setCategoryItems] = useState([]); // State to store categories
   const [searchTerm, setSearchTerm] = useState(""); // Added state for search term
-  const itemsPerPage = 5;
-  const [selectedEvent, setSelectedEvent] = useState(null);
+  const [selectedCategory, setSelectedCategory] = useState(null); // State to store selected category
   const [studentName, setStudentName] = useState(""); // State to store student first name
   const [registrationStatus, setRegistrationStatus] = useState(""); // State for registration status
   const [openSnackbar, setOpenSnackbar] = useState(false); // To control Snackbar visibility
@@ -31,6 +31,18 @@ const StudentHome = () => {
       setStudentName(student.firstName); // Assuming 'firstName' is stored in the user object
     }
 
+    // Fetch categories and events
+    const fetchCategories = async () => {
+      try {
+        const response = await axios.get(
+          "http://localhost:8080/categories/all"
+        );
+        setCategoryItems(response.data);
+      } catch (error) {
+        console.error("Error fetching categories:", error);
+      }
+    };
+
     const fetchEvents = async () => {
       try {
         const response = await axios.get("http://localhost:8080/events/all");
@@ -40,39 +52,31 @@ const StudentHome = () => {
       }
     };
 
+    fetchCategories();
     fetchEvents();
   }, []);
-
-  const handleNext = () => {
-    if (startIndex + itemsPerPage < eventItems.length) {
-      setStartIndex(startIndex + itemsPerPage);
-    }
-  };
-
-  const handlePrev = () => {
-    if (startIndex - itemsPerPage >= 0) {
-      setStartIndex(startIndex - itemsPerPage);
-    }
-  };
-
-  const handleCardClick = (event) => {
-    setSelectedEvent(event);
-    // Make API call to register for the event
-    registerForEvent(event);
-  };
-
-  const handleCloseModal = () => {
-    setSelectedEvent(null);
-  };
 
   const handleSearchChange = (e) => {
     setSearchTerm(e.target.value);
   };
 
-  // Filtered events based on the search term
-  const filteredEvents = eventItems.filter((event) =>
-    event.eventName.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const handleCategoryClick = (category) => {
+    if (selectedCategory === category) {
+      setSelectedCategory(null); // If same category is clicked again, deselect it
+    } else {
+      setSelectedCategory(category); // Set selected category
+    }
+  };
+
+  // Filtered events based on search term and selected category
+  const filteredEvents = eventItems.filter((event) => {
+    const matchesSearch = event.eventName
+      .toLowerCase()
+      .includes(searchTerm.toLowerCase());
+    const matchesCategory =
+      !selectedCategory || event.category.name === selectedCategory.name;
+    return matchesSearch && matchesCategory;
+  });
 
   // Function to register the student for an event
   const registerForEvent = async (event) => {
@@ -123,10 +127,30 @@ const StudentHome = () => {
           />
         </Box>
 
-        <Box sx={{ display: "flex", flexWrap: "wrap", gap: 2 }}>
-          {filteredEvents
-            .slice(startIndex, startIndex + itemsPerPage)
-            .map((event) => (
+        {/* Category Blocks */}
+        <Box
+          sx={{ marginBottom: 3, display: "flex", flexWrap: "wrap", gap: 2 }}
+        >
+          {categoryItems.map((category) => (
+            <Chip
+              key={category.id}
+              label={category.name}
+              color={selectedCategory === category ? "primary" : "default"}
+              clickable
+              onClick={() => handleCategoryClick(category)}
+              sx={{ cursor: "pointer" }}
+            />
+          ))}
+        </Box>
+
+        {/* Display message if no events are found */}
+        {filteredEvents.length === 0 ? (
+          <Typography variant="h6" sx={{ marginTop: 2 }}>
+            No events found for the selected category or search term.
+          </Typography>
+        ) : (
+          <Box sx={{ display: "flex", flexWrap: "wrap", gap: 2 }}>
+            {filteredEvents.map((event) => (
               <Card key={event.eventId} sx={{ minWidth: 250, maxWidth: 300 }}>
                 <CardContent>
                   <Typography variant="h6">{event.eventName}</Typography>
@@ -140,16 +164,13 @@ const StudentHome = () => {
                     <strong>Organizer:</strong> {event.organizer}
                   </Typography>
                   <Typography variant="body2">
-                    <strong>City:</strong> {event.city.cityName}
-                  </Typography>
-                  <Typography variant="body2">
                     <strong>Category:</strong> {event.category.name}
                   </Typography>
                 </CardContent>
                 <CardActions>
                   <Button
                     color="primary"
-                    onClick={() => handleCardClick(event)}
+                    onClick={() => registerForEvent(event)}
                     sx={{ backgroundColor: "#1976d2", color: "white" }}
                   >
                     Register
@@ -157,7 +178,8 @@ const StudentHome = () => {
                 </CardActions>
               </Card>
             ))}
-        </Box>
+          </Box>
+        )}
       </Box>
 
       {/* Snackbar for showing registration status */}

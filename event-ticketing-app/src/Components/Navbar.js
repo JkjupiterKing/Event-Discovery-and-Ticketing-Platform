@@ -17,7 +17,6 @@ import EventNoteIcon from "@mui/icons-material/EventNote";
 import AccountCircleIcon from "@mui/icons-material/AccountCircle";
 import ExitToAppIcon from "@mui/icons-material/ExitToApp";
 import MenuIcon from "@mui/icons-material/Menu";
-import PlaceIcon from "@mui/icons-material/Place"; // Import for City Management
 import CategoryIcon from "@mui/icons-material/Category"; // Import for Category Management
 import CloseIcon from "@mui/icons-material/Close"; // Import for Close Icon
 import PersonIcon from "@mui/icons-material/Person"; // Icon for Student Management
@@ -154,16 +153,6 @@ const Navbar = () => {
                     <CategoryIcon />
                   </ListItemIcon>
                   <ListItemText primary="Category Management" />
-                </ListItem>
-                <ListItem
-                  button
-                  onClick={() => navigate("/city-management")}
-                  sx={{ pr: 7 }}
-                >
-                  <ListItemIcon>
-                    <PlaceIcon />
-                  </ListItemIcon>
-                  <ListItemText primary="City Management" />
                 </ListItem>
                 <ListItem
                   button

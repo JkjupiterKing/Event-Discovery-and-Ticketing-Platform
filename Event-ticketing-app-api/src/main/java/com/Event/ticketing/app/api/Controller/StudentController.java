@@ -88,13 +88,22 @@ public class StudentController {
             String encodedPassword = Base64.getEncoder().encodeToString(updatedStudent.getPassword().getBytes(StandardCharsets.UTF_8));
             existingStudent.setPassword(encodedPassword);
         }
+        if (updatedStudent.getSemester() != null) {
+            existingStudent.setSemester(updatedStudent.getSemester());
+        }
+        if (updatedStudent.getBranch() != null) {
+            existingStudent.setBranch(updatedStudent.getBranch());
+        }
+        if (updatedStudent.getYear() != null) {
+            existingStudent.setYear(updatedStudent.getYear());
+        }
 
         studentRepository.save(existingStudent);
         return ResponseEntity.ok(existingStudent);
     }
 
     // DELETE student by ID
-    @DeleteMapping("/{id}")
+    @DeleteMapping("/delete/{id}")
     public ResponseEntity<String> deleteStudent(@PathVariable Long id) {
         if (!studentRepository.existsById(id)) {
             return ResponseEntity.status(404).body("Student not found.");
@@ -103,4 +112,3 @@ public class StudentController {
         return ResponseEntity.ok("Student deleted successfully.");
     }
 }
-

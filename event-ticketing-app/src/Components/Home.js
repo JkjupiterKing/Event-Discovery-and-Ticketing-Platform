@@ -157,7 +157,10 @@ const Home = () => {
                 <CardContent>
                   <Typography variant="h6">{item.eventName}</Typography>
                   <Typography variant="body2">{item.description}</Typography>
-                  <Typography variant="body2">{item.city.cityName}</Typography>
+                  {/* Replacing cityName with category */}
+                  <Typography variant="body2">
+                    {item.category.name || "Category Not Available"}
+                  </Typography>
                 </CardContent>
               </Card>
             ))}
@@ -226,8 +229,10 @@ const Home = () => {
                 <strong>Date & Time:</strong>{" "}
                 {new Date(selectedEvent.eventDateTime).toLocaleString()}
               </Typography>
+              {/* Replacing cityName with category */}
               <Typography variant="body1">
-                <strong>Location:</strong> {selectedEvent.city.cityName}
+                <strong>Category:</strong>{" "}
+                {selectedEvent.category.name || "Category Not Available"}
               </Typography>
               <Typography variant="body1">
                 <strong>Organizer:</strong> {selectedEvent.organizer}
