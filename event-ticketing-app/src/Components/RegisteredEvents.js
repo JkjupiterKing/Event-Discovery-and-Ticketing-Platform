@@ -93,7 +93,6 @@ const RegisteredEvents = () => {
     setOpenDialog(false); // Close the confirmation dialog without deleting
   };
 
-  // Function to generate PDF and handle print functionality
   const handlePrint = () => {
     const doc = new jsPDF();
 
@@ -102,66 +101,59 @@ const RegisteredEvents = () => {
     doc.setFont("helvetica", "bold");
     doc.text("Registered Events", 14, 22);
 
-    // Prepare data for transposed table
-    const headers = [
-      "Event Name",
-      "Event Date & Time",
-      "Category",
-      "Student Name",
-    ];
-    const data = filteredEvents.map((registration) => [
-      registration.event.eventName,
-      new Date(registration.event.eventDateTime).toLocaleString(),
-      registration.event.category.name,
-      registration.student.firstName,
-    ]);
+    // Prepare data for display
+    const eventData = filteredEvents.map((registration) => ({
+      eventName: registration.event.eventName,
+      eventDateTime: new Date(
+        registration.event.eventDateTime
+      ).toLocaleString(),
+      category: registration.event.category.name,
+      studentName: registration.student.firstName,
+      branch: registration.student.branch,
+      semester: registration.student.semester,
+      year: registration.student.year,
+      registrationTime: new Date(
+        registration.registrationTime
+      ).toLocaleString(),
+    }));
 
-    // Set table dimensions
-    const startX = 14;
-    const startY = 30;
-    const rowHeight = 10;
-    const columnWidths = [
-      60, // Event Name
-      60, // Event Date & Time
-      40, // Category
-      40, // Student Name
-    ];
+    let yPosition = 30; // Start y position for the text
 
-    // Draw table headers
-    let xPosition = startX;
-    headers.forEach((header, index) => {
+    // Loop through the event data and add it to the document
+    eventData.forEach((registration, index) => {
       doc.setFont("helvetica", "normal");
-      doc.setTextColor(255, 255, 255);
-      doc.setFillColor(0, 0, 0); // Black background for header
-      doc.rect(
-        xPosition,
-        startY - rowHeight,
-        columnWidths[index],
-        rowHeight,
-        "F"
+      doc.setTextColor(0, 0, 0);
+
+      // Add event details
+      doc.text(`Event Name: ${registration.eventName}`, 14, yPosition);
+      yPosition += 6;
+      doc.text(
+        `Event Date & Time: ${registration.eventDateTime}`,
+        14,
+        yPosition
       );
-      doc.setTextColor(255, 255, 255);
-      doc.text(header, xPosition + 2, startY - rowHeight + 6);
-      xPosition += columnWidths[index];
-    });
+      yPosition += 6;
+      doc.text(`Category: ${registration.category}`, 14, yPosition);
+      yPosition += 6;
+      doc.text(`Student Name: ${registration.studentName}`, 14, yPosition);
+      yPosition += 6;
+      doc.text(`Branch: ${registration.branch}`, 14, yPosition);
+      yPosition += 6;
+      doc.text(`Semester: ${registration.semester}`, 14, yPosition);
+      yPosition += 6;
+      doc.text(`Year: ${registration.year}`, 14, yPosition);
+      yPosition += 6;
+      doc.text(
+        `Registration Time: ${registration.registrationTime}`,
+        14,
+        yPosition
+      );
+      yPosition += 10; // Add space between events
 
-    // Draw table rows
-    let yPosition = startY;
-    data.forEach((row) => {
-      xPosition = startX;
-      row.forEach((cell, index) => {
-        doc.setFont("helvetica", "normal");
-        doc.setTextColor(0, 0, 0);
-        doc.rect(xPosition, yPosition, columnWidths[index], rowHeight);
-        doc.text(cell, xPosition + 2, yPosition + 6);
-        xPosition += columnWidths[index];
-      });
-      yPosition += rowHeight;
-
-      // Add a new page if the content exceeds the page height
-      if (yPosition > 260) {
+      // Add a page if the content is too long
+      if (yPosition > 250) {
         doc.addPage();
-        yPosition = startY;
+        yPosition = 20;
       }
     });
 
@@ -179,21 +171,28 @@ const RegisteredEvents = () => {
           Registered Events
         </Typography>
 
-        {/* Search bar */}
-        <Box sx={{ marginBottom: 2, width: 500 }}>
+        {/* Search bar and Print button in the same line */}
+        <Box
+          sx={{
+            display: "flex",
+            justifyContent: "space-between",
+            marginBottom: 2,
+          }}
+        >
           <TextField
             label="Search Registered Events"
             variant="outlined"
-            fullWidth
             value={searchTerm}
             onChange={handleSearchChange}
+            sx={{ width: 500 }}
           />
-        </Box>
-
-        {/* Print Button */}
-        <Box sx={{ marginBottom: 2 }}>
-          <Button variant="contained" color="primary" onClick={handlePrint}>
-            Print Events (PDF)
+          <Button
+            variant="contained"
+            color="primary"
+            onClick={handlePrint}
+            sx={{ alignSelf: "flex-end" }}
+          >
+            Download Registered Events
           </Button>
         </Box>
 
