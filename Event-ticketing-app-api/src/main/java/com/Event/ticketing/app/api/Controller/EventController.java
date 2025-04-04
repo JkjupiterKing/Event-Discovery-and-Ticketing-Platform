@@ -90,6 +90,7 @@ public class EventController {
         eventToUpdate.setStatus(eventDetails.getStatus());
         eventToUpdate.setContactEmail(eventDetails.getContactEmail());
         eventToUpdate.setContactPhone(eventDetails.getContactPhone());
+        eventToUpdate.setResult(eventDetails.getResult());
         eventToUpdate.setUpdatedAt(LocalDateTime.now());
 
         Event updatedEvent = eventRepository.save(eventToUpdate);

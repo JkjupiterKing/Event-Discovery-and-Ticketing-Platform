@@ -15,6 +15,10 @@ import {
   Card,
   CardContent,
   CardActions,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogTitle,
 } from "@mui/material";
 import MuiAlert from "@mui/material/Alert";
 import axios from "axios";
@@ -49,14 +53,15 @@ const Events = () => {
     status: "",
     contactEmail: "",
     contactPhone: "",
+    result: "",
   });
 
   const [editMode, setEditMode] = useState(false);
   const [editEventId, setEditEventId] = useState(null);
   const [snackbarOpen, setSnackbarOpen] = useState(false);
   const [snackbarMessage, setSnackbarMessage] = useState("");
-  const [confirmationOpen, setConfirmationOpen] = useState(false);
-  const [deleteEventId, setDeleteEventId] = useState(null);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false); // To control delete confirmation dialog
+  const [eventToDelete, setEventToDelete] = useState(null); // To store the event that is selected for deletion
 
   useEffect(() => {
     const fetchEvents = async () => {
@@ -111,6 +116,7 @@ const Events = () => {
       status: "",
       contactEmail: "",
       contactPhone: "",
+      result: "",
     });
     setEditEventId(null);
   };
@@ -142,7 +148,8 @@ const Events = () => {
       !newEvent.contactPhone ||
       !newEvent.status ||
       !newEvent.capacity ||
-      !newEvent.registrationFee
+      !newEvent.registrationFee ||
+      !newEvent.result // Ensure result is present
     ) {
       setSnackbarMessage("All fields are required.");
       setSnackbarOpen(true);
@@ -199,25 +206,30 @@ const Events = () => {
     setModalOpen(true);
   };
 
-  const handleDeleteConfirmation = (id) => {
-    setDeleteEventId(id);
-    setConfirmationOpen(true);
-  };
-
   const handleDelete = async () => {
     try {
-      await axios.delete(`${DELETE_EVENT_API}/${deleteEventId}`);
+      await axios.delete(`${DELETE_EVENT_API}/${eventToDelete.eventId}`);
       setEvents((prev) =>
-        prev.filter((event) => event.eventId !== deleteEventId)
+        prev.filter((event) => event.eventId !== eventToDelete.eventId)
       );
       setSnackbarMessage("Event deleted successfully!");
+      setDeleteDialogOpen(false); // Close the confirmation dialog
     } catch (error) {
       console.error("Error deleting event:", error);
       setSnackbarMessage("Could not delete event. Please try again later.");
     } finally {
-      setConfirmationOpen(false);
       setSnackbarOpen(true);
     }
+  };
+
+  const handleDeleteDialogOpen = (event) => {
+    setEventToDelete(event);
+    setDeleteDialogOpen(true);
+  };
+
+  const handleDeleteDialogClose = () => {
+    setDeleteDialogOpen(false);
+    setEventToDelete(null);
   };
 
   const handleSnackbarClose = () => {
@@ -276,6 +288,12 @@ const Events = () => {
                   <Typography variant="body2">
                     <strong>Category:</strong> {event.category.name}
                   </Typography>
+                  {/* Display the result */}
+                  {event.result && (
+                    <Typography variant="body2">
+                      <strong>Result:</strong> {event.result}
+                    </Typography>
+                  )}
                 </CardContent>
                 <CardActions>
                   <Button
@@ -287,7 +305,7 @@ const Events = () => {
                   </Button>
                   <Button
                     color="secondary"
-                    onClick={() => handleDeleteConfirmation(event.eventId)}
+                    onClick={() => handleDeleteDialogOpen(event)} // Open delete dialog
                     sx={{
                       ml: 1,
                       backgroundColor: "#1976d2",
@@ -438,71 +456,67 @@ const Events = () => {
                 onChange={handleInputChange}
               />
             </Grid>
+            {/* Add result Textarea */}
+            <Grid item xs={12}>
+              <TextField
+                label="Result"
+                value={newEvent.result}
+                size="small"
+                variant="outlined"
+                name="result"
+                fullWidth
+                multiline
+                rows={1}
+                onChange={handleInputChange}
+              />
+            </Grid>
           </Grid>
-          <Box mt={2} display="flex" justifyContent="space-between">
+          <Box mt={2}>
             <Button
-              variant="outlined"
-              onClick={handleModalClose}
+              variant="contained"
               color="primary"
+              sx={{ marginRight: "10px" }}
+              onClick={handleSubmit}
             >
-              Cancel
-            </Button>
-            <Button variant="contained" color="primary" onClick={handleSubmit}>
               {editMode ? "Update Event" : "Create Event"}
+            </Button>
+            <Button variant="outlined" onClick={handleModalClose}>
+              Cancel
             </Button>
           </Box>
         </div>
       </Modal>
 
-      {/* Snackbar for feedback */}
+      {/* Snackbar for notifications */}
       <Snackbar
         open={snackbarOpen}
-        autoHideDuration={6000}
+        autoHideDuration={3000}
         onClose={handleSnackbarClose}
       >
         <MuiAlert
           onClose={handleSnackbarClose}
-          severity="info"
+          severity="success"
           sx={{ width: "100%" }}
         >
           {snackbarMessage}
         </MuiAlert>
       </Snackbar>
 
-      {/* Confirmation Dialog for Delete */}
-      <Modal open={confirmationOpen} onClose={() => setConfirmationOpen(false)}>
-        <div
-          style={{
-            padding: "20px",
-            backgroundColor: "white",
-            width: "400px",
-            margin: "200px auto",
-            borderRadius: "8px",
-            textAlign: "center",
-          }}
-        >
-          <Typography variant="h6">
-            Are you sure you want to delete this event?
-          </Typography>
-          <Box mt={2} display="flex" justifyContent="center">
-            <Button
-              variant="outlined"
-              color="primary"
-              sx={{ marginRight: 2 }}
-              onClick={() => setConfirmationOpen(false)}
-            >
-              Cancel
-            </Button>
-            <Button
-              variant="contained"
-              color="secondary"
-              onClick={handleDelete}
-            >
-              Delete
-            </Button>
-          </Box>
-        </div>
-      </Modal>
+      {/* Delete Confirmation Dialog */}
+      <Dialog open={deleteDialogOpen} onClose={handleDeleteDialogClose}>
+        <DialogTitle>Confirm Delete</DialogTitle>
+        <DialogContent>
+          <Typography>Are you sure you want to delete this event?</Typography>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleDeleteDialogClose} color="primary">
+            Cancel
+          </Button>
+          <Button onClick={handleDelete} color="secondary">
+            Delete
+          </Button>
+        </DialogActions>
+      </Dialog>
     </>
   );
 };

@@ -50,6 +50,10 @@ const RegisteredEvents = () => {
     };
 
     fetchRegisteredEvents();
+
+    // Get the role from localStorage
+    const userRole = localStorage.getItem("role");
+    setRole(userRole); // Set the role in state
   }, []); // Empty dependency array, meaning it will run once when the component mounts
 
   const handleSearchChange = (e) => {
@@ -186,14 +190,17 @@ const RegisteredEvents = () => {
             onChange={handleSearchChange}
             sx={{ width: 500 }}
           />
-          <Button
-            variant="contained"
-            color="primary"
-            onClick={handlePrint}
-            sx={{ alignSelf: "flex-end" }}
-          >
-            Download Registered Events
-          </Button>
+          {/* Conditionally render the button based on role */}
+          {role !== "student" && (
+            <Button
+              variant="contained"
+              color="primary"
+              onClick={handlePrint}
+              sx={{ alignSelf: "flex-end" }}
+            >
+              Download Registered Events
+            </Button>
+          )}
         </Box>
 
         {/* Table of registered events */}
