@@ -361,12 +361,17 @@ const Events = () => {
             <Grid item xs={4}>
               <Typography>Event Date and Time</Typography>
               <TextField
-                type="datetime-local"
-                value={newEvent.eventDateTime}
-                name="eventDateTime"
-                fullWidth
-                onChange={handleInputChange}
-              />
+  type="datetime-local"
+  value={newEvent.eventDateTime}
+  name="eventDateTime"
+  fullWidth
+  onChange={handleInputChange}
+  InputProps={{
+    inputProps: {
+      min: new Date().toISOString().slice(0, 16),  // <-- Disable past date and time
+    },
+  }}
+/>
             </Grid>
             <Grid item xs={4} sx={{ marginTop: "1em" }}>
               <TextField
