@@ -17,13 +17,13 @@ import CloseIcon from "@mui/icons-material/Close";
 
 const items = [
   {
-    img: `${process.env.PUBLIC_URL}/Sports.jpg`,
+    img: `${process.env.PUBLIC_URL}/Event1.png`,
     title: "JSS Polytechnic Sports",
     description:
       "Get ready for action-packed sports events featuring local teams and thrilling competitions. Cheer for your favorites and experience the excitement of live sports, from football to basketball and more!",
   },
   {
-    img: `${process.env.PUBLIC_URL}/Events.png`,
+    img: `${process.env.PUBLIC_URL}/Activities.jpg`,
     title: "JSS Polytechnic Cultural Events",
     description:
       "Be a part of our vibrant cultural events, where connections are made and memories are created. Join us for workshops, festivals, and gatherings that celebrate culture, creativity, and togetherness.",
