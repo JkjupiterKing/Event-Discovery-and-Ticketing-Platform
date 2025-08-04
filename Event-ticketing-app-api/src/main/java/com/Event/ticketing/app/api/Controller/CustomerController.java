@@ -1,7 +1,7 @@
 package com.Event.ticketing.app.api.Controller;
 
-import com.Event.ticketing.app.api.Model.Student;
-import com.Event.ticketing.app.api.Repo.StudentRepo;
+import com.Event.ticketing.app.api.Model.Customer;
+import com.Event.ticketing.app.api.Repo.CustomerRepo;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -18,16 +18,16 @@ import java.util.Optional;
 public class StudentController {
 
     @Autowired
-    private StudentRepo studentRepository;
+    private CustomerRepo customerRepo;
 
     @GetMapping("/all")
-    public List<Student> getAllStudents() {
+    public List<Customer> getAllStudents() {
         return studentRepository.findAll();
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<Student> getStudentById(@PathVariable Long id) {
-        Optional<Student> student = studentRepository.findById(id);
+    public ResponseEntity<Customer> getStudentById(@PathVariable Long id) {
+        Optional<Customer> student = studentRepository.findById(id);
         return student.map(ResponseEntity::ok)
                 .orElseGet(() -> ResponseEntity.status(404).build());
     }
@@ -88,14 +88,17 @@ public class StudentController {
             String encodedPassword = Base64.getEncoder().encodeToString(updatedStudent.getPassword().getBytes(StandardCharsets.UTF_8));
             existingStudent.setPassword(encodedPassword);
         }
-        if (updatedStudent.getSemester() != null) {
-            existingStudent.setSemester(updatedStudent.getSemester());
+        if (updatedStudent.getGender() != null) {
+            existingStudent.setGender(updatedStudent.getGender());
         }
-        if (updatedStudent.getBranch() != null) {
-            existingStudent.setBranch(updatedStudent.getBranch());
+        if (updatedStudent.getCity() != null) {
+            existingStudent.setCity(updatedStudent.getCity());
         }
-        if (updatedStudent.getYear() != null) {
-            existingStudent.setYear(updatedStudent.getYear());
+        if (updatedStudent.getState() != null) {
+            existingStudent.setState(updatedStudent.getState());
+        }
+        if (updatedStudent.getCountry() != null) {
+            existingStudent.setCountry(updatedStudent.getCountry());
         }
 
         studentRepository.save(existingStudent);

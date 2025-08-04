@@ -4,13 +4,13 @@ import jakarta.persistence.*;
 import lombok.*;
 
 @Entity
-@Table(name = "Students")
+@Table(name = "Customers")
 @NoArgsConstructor
 @AllArgsConstructor
 @Setter
 @Getter
 @ToString
-public class Student {
+public class Customer {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -18,11 +18,13 @@ public class Student {
 
     private String firstName;
     private String lastName;
+    private String gender;
 
     @Column(nullable = false, unique = true)
     private String email;
+
     private String password;
-    private String semester;
-    private String branch;
-    private String year;
+    private String city;
+    private String state;
+    private String country;
 }
