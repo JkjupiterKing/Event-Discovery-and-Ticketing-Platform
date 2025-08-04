@@ -19,8 +19,8 @@ public class RegisteredEvents {
     private Long id;
 
     @ManyToOne
-    @JoinColumn(name = "student_id", nullable = false)
-    private Student student;
+    @JoinColumn(name = "customer_id", nullable = false) // Changed from student_id
+    private Customer customer;
 
     @ManyToOne
     @JoinColumn(name = "event_id", nullable = false)
@@ -28,6 +28,4 @@ public class RegisteredEvents {
 
     @Column(name = "registration_time", nullable = false)
     private LocalDateTime registrationTime;
-
 }
-

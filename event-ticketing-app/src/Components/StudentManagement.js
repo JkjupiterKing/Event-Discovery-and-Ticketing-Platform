@@ -29,49 +29,28 @@ import PropTypes from "prop-types";
 const TablePaginationActions = (props) => {
   const { count, page, rowsPerPage, onPageChange } = props;
 
-  const handleFirstPageButtonClick = (event) => {
-    onPageChange(event, 0);
-  };
-
-  const handleBackButtonClick = (event) => {
-    onPageChange(event, page - 1);
-  };
-
-  const handleNextButtonClick = (event) => {
-    onPageChange(event, page + 1);
-  };
-
-  const handleLastPageButtonClick = (event) => {
-    onPageChange(event, Math.max(0, Math.ceil(count / rowsPerPage) - 1));
-  };
-
   return (
     <Box sx={{ flexShrink: 0, ml: 2.5 }}>
-      <IconButton
-        onClick={handleFirstPageButtonClick}
-        disabled={page === 0}
-        aria-label="first page"
-      >
+      <IconButton onClick={(e) => onPageChange(e, 0)} disabled={page === 0}>
         <FirstPageIcon />
       </IconButton>
       <IconButton
-        onClick={handleBackButtonClick}
+        onClick={(e) => onPageChange(e, page - 1)}
         disabled={page === 0}
-        aria-label="previous page"
       >
         <KeyboardArrowLeft />
       </IconButton>
       <IconButton
-        onClick={handleNextButtonClick}
+        onClick={(e) => onPageChange(e, page + 1)}
         disabled={page >= Math.ceil(count / rowsPerPage) - 1}
-        aria-label="next page"
       >
         <KeyboardArrowRight />
       </IconButton>
       <IconButton
-        onClick={handleLastPageButtonClick}
+        onClick={(e) =>
+          onPageChange(e, Math.max(0, Math.ceil(count / rowsPerPage) - 1))
+        }
         disabled={page >= Math.ceil(count / rowsPerPage) - 1}
-        aria-label="last page"
       >
         <LastPageIcon />
       </IconButton>
@@ -86,72 +65,80 @@ TablePaginationActions.propTypes = {
   rowsPerPage: PropTypes.number.isRequired,
 };
 
-const StudentManagement = () => {
-  const [students, setStudents] = useState([]);
+const CustomerManagement = () => {
+  const [customers, setCustomers] = useState([]);
   const [modalOpen, setModalOpen] = useState(false);
-  const [newStudent, setNewStudent] = useState({
+  const [newCustomer, setNewCustomer] = useState({
     firstName: "",
     lastName: "",
     email: "",
     password: "",
-    semester: "",
-    branch: "",
-    year: "",
+    gender: "",
+    city: "",
+    state: "",
+    country: "",
   });
-  const [editStudent, setEditStudent] = useState(null);
+  const [editCustomer, setEditCustomer] = useState(null);
   const [snackbarOpen, setSnackbarOpen] = useState(false);
   const [snackbarMessage, setSnackbarMessage] = useState("");
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(5);
   const [searchQuery, setSearchQuery] = useState("");
   const [deleteConfirmationOpen, setDeleteConfirmationOpen] = useState(false);
-  const [studentToDelete, setStudentToDelete] = useState(null);
+  const [customerToDelete, setCustomerToDelete] = useState(null);
 
-  // Fetch students from the API
-  const fetchStudents = async () => {
+  const fetchCustomers = async () => {
     try {
-      const response = await axios.get("http://localhost:8080/students/all");
-      setStudents(response.data);
+      const response = await axios.get("http://localhost:8080/customers/all");
+      setCustomers(response.data);
     } catch (error) {
-      console.error("Error fetching students:", error);
-      setSnackbarMessage("Error fetching students.");
+      setSnackbarMessage("Error fetching customers.");
       setSnackbarOpen(true);
     }
   };
 
   useEffect(() => {
-    fetchStudents();
+    fetchCustomers();
   }, []);
 
-  const handleAddStudent = async () => {
+  const handleAddCustomer = async () => {
+    const {
+      firstName,
+      lastName,
+      email,
+      password,
+      gender,
+      city,
+      state,
+      country,
+    } = newCustomer;
+
     if (
-      !newStudent.firstName ||
-      !newStudent.lastName ||
-      !newStudent.email ||
-      !newStudent.password ||
-      !newStudent.semester ||
-      !newStudent.branch ||
-      !newStudent.year
+      !firstName ||
+      !lastName ||
+      !email ||
+      !password ||
+      !gender ||
+      !city ||
+      !state ||
+      !country
     ) {
-      setSnackbarMessage(
-        "Enter First Name, Last Name, Email, Password, Semester, Branch, and Year."
-      );
+      setSnackbarMessage("All fields are required.");
       setSnackbarOpen(true);
       return;
     }
 
     try {
-      if (editStudent) {
+      if (editCustomer) {
         await axios.put(
-          `http://localhost:8080/students/${editStudent.id}`,
-          newStudent
+          `http://localhost:8080/customers/${editCustomer.id}`,
+          newCustomer
         );
       } else {
         const response = await axios.post(
-          "http://localhost:8080/students/create",
-          newStudent
+          "http://localhost:8080/customers/create",
+          newCustomer
         );
-        // Check if the backend response contains the email error message
         if (response.data === "Email is already in use.") {
           setSnackbarMessage("Email is already in use.");
           setSnackbarOpen(true);
@@ -159,100 +146,73 @@ const StudentManagement = () => {
         }
       }
 
-      // Reset fields and close modal after successful operation
-      setNewStudent({
+      setNewCustomer({
         firstName: "",
         lastName: "",
         email: "",
         password: "",
-        semester: "",
-        branch: "",
-        year: "",
+        gender: "",
+        city: "",
+        state: "",
+        country: "",
       });
       setModalOpen(false);
-      setEditStudent(null);
-      fetchStudents();
+      setEditCustomer(null);
+      fetchCustomers();
       setSnackbarMessage(
-        editStudent
-          ? "Student updated successfully."
-          : "Student added successfully."
+        editCustomer ? "Customer updated." : "Customer added."
       );
     } catch (error) {
-      // Handle the error specifically for email uniqueness issue
-      if (
-        error.response &&
-        error.response.data === "Email is already in use."
-      ) {
+      if (error.response?.data === "Email is already in use.") {
         setSnackbarMessage("Email is already in use.");
       } else {
-        setSnackbarMessage("Error adding/updating student.");
+        setSnackbarMessage("Error adding/updating customer.");
       }
       setSnackbarOpen(true);
     }
   };
 
-  const handleEditStudent = (student) => {
-    setNewStudent({
-      firstName: student.firstName,
-      lastName: student.lastName,
-      email: student.email,
-      password: student.password,
-      semester: student.semester,
-      branch: student.branch,
-      year: student.year,
-    });
-    setEditStudent(student);
+  const handleEditCustomer = (customer) => {
+    setNewCustomer({ ...customer });
+    setEditCustomer(customer);
     setModalOpen(true);
   };
 
-  const handleOpenDeleteConfirmation = (student) => {
-    setStudentToDelete(student);
+  const handleOpenDeleteConfirmation = (customer) => {
+    setCustomerToDelete(customer);
     setDeleteConfirmationOpen(true);
   };
 
-  const handleDeleteStudent = async () => {
-    if (studentToDelete) {
+  const handleDeleteCustomer = async () => {
+    if (customerToDelete) {
       try {
-        // Sending DELETE request to the backend
         const response = await axios.delete(
-          `http://localhost:8080/students/delete/${studentToDelete.id}`
+          `http://localhost:8080/customers/delete/${customerToDelete.id}`
         );
-
-        // Check if the response is successful (status code 200)
         if (response.status === 200) {
-          // Update the students list after successful deletion
-          fetchStudents();
-          setSnackbarMessage("Student deleted successfully.");
-          setSnackbarOpen(true);
+          fetchCustomers();
+          setSnackbarMessage("Customer deleted successfully.");
         } else {
-          // Handle the case when the deletion was not successful
-          setSnackbarMessage("Error deleting student.");
-          setSnackbarOpen(true);
+          setSnackbarMessage("Error deleting customer.");
         }
       } catch (error) {
-        console.error("Error deleting student:", error);
-        setSnackbarMessage("Error deleting student.");
-        setSnackbarOpen(true);
+        setSnackbarMessage("Error deleting customer.");
       }
-      setDeleteConfirmationOpen(false); // Close the confirmation dialog
+      setSnackbarOpen(true);
+      setDeleteConfirmationOpen(false);
     }
   };
 
-  const handleSnackbarClose = () => {
-    setSnackbarOpen(false);
-  };
+  const handleSnackbarClose = () => setSnackbarOpen(false);
 
-  const filteredStudents = students.filter(
-    (student) =>
-      student.firstName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      student.lastName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      student.email.toLowerCase().includes(searchQuery.toLowerCase())
+  const filteredCustomers = customers.filter(
+    (customer) =>
+      customer.firstName.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      customer.lastName.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      customer.email.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
-  const handleChangePage = (event, newPage) => {
-    setPage(newPage);
-  };
-
+  const handleChangePage = (event, newPage) => setPage(newPage);
   const handleChangeRowsPerPage = (event) => {
     setRowsPerPage(parseInt(event.target.value, 10));
     setPage(0);
@@ -263,20 +223,19 @@ const StudentManagement = () => {
       <Navbar />
       <div style={{ padding: "3em" }}>
         <Typography variant="h4" gutterBottom>
-          Student Management
+          Customer Management
         </Typography>
+
         <Box
           sx={{
             display: "flex",
             justifyContent: "space-between",
-            alignItems: "center",
             marginBottom: "1em",
           }}
         >
           <TextField
-            label="Search Students"
+            label="Search Customers"
             variant="outlined"
-            margin="normal"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             sx={{ width: "15em" }}
@@ -286,21 +245,23 @@ const StudentManagement = () => {
             color="secondary"
             onClick={() => {
               setModalOpen(true);
-              setEditStudent(null);
-              setNewStudent({
+              setEditCustomer(null);
+              setNewCustomer({
                 firstName: "",
                 lastName: "",
                 email: "",
                 password: "",
-                semester: "",
-                branch: "",
-                year: "",
+                gender: "",
+                city: "",
+                state: "",
+                country: "",
               });
             }}
           >
-            Add Student
+            Add Customer
           </Button>
         </Box>
+
         <TableContainer component={Paper}>
           <Table>
             <TableHead>
@@ -308,43 +269,45 @@ const StudentManagement = () => {
                 <TableCell>First Name</TableCell>
                 <TableCell>Last Name</TableCell>
                 <TableCell>Email</TableCell>
-                <TableCell>Semester</TableCell>
-                <TableCell>Branch</TableCell>
-                <TableCell>Year</TableCell>
+                <TableCell>Gender</TableCell>
+                <TableCell>City</TableCell>
+                <TableCell>State</TableCell>
+                <TableCell>Country</TableCell>
                 <TableCell>Actions</TableCell>
               </TableRow>
             </TableHead>
             <TableBody>
               {(rowsPerPage > 0
-                ? filteredStudents.slice(
+                ? filteredCustomers.slice(
                     page * rowsPerPage,
                     page * rowsPerPage + rowsPerPage
                   )
-                : filteredStudents
-              ).map((student) => (
-                <TableRow key={student.id}>
-                  <TableCell>{student.firstName}</TableCell>
-                  <TableCell>{student.lastName}</TableCell>
-                  <TableCell>{student.email}</TableCell>
-                  <TableCell>{student.semester}</TableCell>
-                  <TableCell>{student.branch}</TableCell>
-                  <TableCell>{student.year}</TableCell>
+                : filteredCustomers
+              ).map((customer) => (
+                <TableRow key={customer.id}>
+                  <TableCell>{customer.firstName}</TableCell>
+                  <TableCell>{customer.lastName}</TableCell>
+                  <TableCell>{customer.email}</TableCell>
+                  <TableCell>{customer.gender}</TableCell>
+                  <TableCell>{customer.city}</TableCell>
+                  <TableCell>{customer.state}</TableCell>
+                  <TableCell>{customer.country}</TableCell>
                   <TableCell>
                     <Button
                       color="primary"
-                      onClick={() => handleEditStudent(student)}
                       sx={{ backgroundColor: "#1976d2", color: "white" }}
+                      onClick={() => handleEditCustomer(customer)}
                     >
                       Update
                     </Button>
                     <Button
                       color="secondary"
-                      onClick={() => handleOpenDeleteConfirmation(student)}
                       sx={{
                         backgroundColor: "#1976d2",
                         color: "white",
                         marginLeft: "0.3em",
                       }}
+                      onClick={() => handleOpenDeleteConfirmation(customer)}
                     >
                       Delete
                     </Button>
@@ -356,8 +319,8 @@ const StudentManagement = () => {
               <TableRow>
                 <TablePagination
                   rowsPerPageOptions={[5, 10, 25, { label: "All", value: -1 }]}
-                  colSpan={7}
-                  count={filteredStudents.length}
+                  colSpan={8}
+                  count={filteredCustomers.length}
                   rowsPerPage={rowsPerPage}
                   page={page}
                   onPageChange={handleChangePage}
@@ -368,116 +331,61 @@ const StudentManagement = () => {
             </TableFooter>
           </Table>
         </TableContainer>
-        {/* Modal for adding/updating a student */}
+
+        {/* Modal for Add/Edit */}
         <Modal open={modalOpen} onClose={() => setModalOpen(false)}>
           <div
             style={{
               padding: 20,
               backgroundColor: "white",
               margin: "100px auto",
-              width: "500px", // Adjusted width for better layout
+              width: "500px",
               borderRadius: "8px",
             }}
           >
             <Typography variant="h6">
-              {editStudent ? "Update Student" : "Add New Student"}
+              {editCustomer ? "Update Customer" : "Add New Customer"}
             </Typography>
-
-            {/* Grid layout for form fields */}
             <Grid container spacing={2}>
-              <Grid item xs={6}>
-                <TextField
-                  label="First Name"
-                  fullWidth
-                  variant="standard"
-                  value={newStudent.firstName}
-                  onChange={(e) =>
-                    setNewStudent({ ...newStudent, firstName: e.target.value })
-                  }
-                />
-              </Grid>
-              <Grid item xs={6}>
-                <TextField
-                  label="Last Name"
-                  fullWidth
-                  variant="standard"
-                  value={newStudent.lastName}
-                  onChange={(e) =>
-                    setNewStudent({ ...newStudent, lastName: e.target.value })
-                  }
-                />
-              </Grid>
-
-              <Grid item xs={6}>
-                <TextField
-                  label="Email"
-                  fullWidth
-                  variant="standard"
-                  value={newStudent.email}
-                  onChange={(e) =>
-                    setNewStudent({ ...newStudent, email: e.target.value })
-                  }
-                />
-              </Grid>
-              <Grid item xs={6}>
-                <TextField
-                  label="Password"
-                  fullWidth
-                  variant="standard"
-                  type="password"
-                  value={newStudent.password}
-                  onChange={(e) =>
-                    setNewStudent({ ...newStudent, password: e.target.value })
-                  }
-                />
-              </Grid>
-
-              <Grid item xs={6}>
-                <TextField
-                  label="Semester"
-                  fullWidth
-                  variant="standard"
-                  value={newStudent.semester}
-                  onChange={(e) =>
-                    setNewStudent({ ...newStudent, semester: e.target.value })
-                  }
-                />
-              </Grid>
-              <Grid item xs={6}>
-                <TextField
-                  label="Branch"
-                  fullWidth
-                  variant="standard"
-                  value={newStudent.branch}
-                  onChange={(e) =>
-                    setNewStudent({ ...newStudent, branch: e.target.value })
-                  }
-                />
-              </Grid>
-
-              <Grid item xs={6}>
-                <TextField
-                  label="Year"
-                  fullWidth
-                  variant="standard"
-                  value={newStudent.year}
-                  onChange={(e) =>
-                    setNewStudent({ ...newStudent, year: e.target.value })
-                  }
-                />
-              </Grid>
+              {[
+                "firstName",
+                "lastName",
+                "email",
+                "password",
+                "gender",
+                "city",
+                "state",
+                "country",
+              ].map((field) => (
+                <Grid item xs={6} key={field}>
+                  <TextField
+                    label={field.charAt(0).toUpperCase() + field.slice(1)}
+                    fullWidth
+                    variant="standard"
+                    type={field === "password" ? "password" : "text"}
+                    value={newCustomer[field]}
+                    onChange={(e) =>
+                      setNewCustomer({
+                        ...newCustomer,
+                        [field]: e.target.value,
+                      })
+                    }
+                  />
+                </Grid>
+              ))}
             </Grid>
-
             <Button
               variant="contained"
               color="secondary"
-              onClick={handleAddStudent}
+              onClick={handleAddCustomer}
               sx={{ marginTop: "1em" }}
             >
-              {editStudent ? "Update" : "Add"}
+              {editCustomer ? "Update" : "Add"}
             </Button>
           </div>
         </Modal>
+
+        {/* Modal for Delete Confirmation */}
         <Modal
           open={deleteConfirmationOpen}
           onClose={() => setDeleteConfirmationOpen(false)}
@@ -487,12 +395,12 @@ const StudentManagement = () => {
               padding: 20,
               backgroundColor: "white",
               margin: "100px auto",
-              width: "400px", // Adjusted width for delete confirmation modal
+              width: "400px",
               borderRadius: "8px",
             }}
           >
             <Typography variant="h6">
-              Are you sure you want to delete this student?
+              Are you sure you want to delete this customer?
             </Typography>
             <Box
               sx={{
@@ -504,7 +412,7 @@ const StudentManagement = () => {
               <Button
                 variant="contained"
                 color="primary"
-                onClick={() => handleDeleteStudent()}
+                onClick={handleDeleteCustomer}
               >
                 Delete
               </Button>
@@ -518,7 +426,7 @@ const StudentManagement = () => {
             </Box>
           </div>
         </Modal>
-        {/* Snackbar for notifications */}
+
         <Snackbar
           open={snackbarOpen}
           autoHideDuration={6000}
@@ -530,4 +438,4 @@ const StudentManagement = () => {
   );
 };
 
-export default StudentManagement;
+export default CustomerManagement;

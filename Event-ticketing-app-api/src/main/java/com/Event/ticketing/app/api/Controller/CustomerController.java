@@ -13,105 +13,100 @@ import java.util.List;
 import java.util.Optional;
 
 @RestController
-@RequestMapping("/students")
+@RequestMapping("/customers")
 @CrossOrigin
-public class StudentController {
+public class CustomerController {
 
     @Autowired
     private CustomerRepo customerRepo;
 
     @GetMapping("/all")
-    public List<Customer> getAllStudents() {
-        return studentRepository.findAll();
+    public List<Customer> getAllCustomers() {
+        return customerRepo.findAll();
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<Customer> getStudentById(@PathVariable Long id) {
-        Optional<Customer> student = studentRepository.findById(id);
-        return student.map(ResponseEntity::ok)
+    public ResponseEntity<Customer> getCustomerById(@PathVariable Long id) {
+        Optional<Customer> customer = customerRepo.findById(id);
+        return customer.map(ResponseEntity::ok)
                 .orElseGet(() -> ResponseEntity.status(404).build());
     }
 
     @PostMapping("/create")
-    public ResponseEntity<String> createStudent(@RequestBody Student student) {
-        if (studentRepository.findByEmail(student.getEmail()) != null) {
+    public ResponseEntity<String> createCustomer(@RequestBody Customer customer) {
+        if (customerRepo.findByEmail(customer.getEmail()) != null) {
             return ResponseEntity.status(400).body("Email is already in use.");
         }
 
-        String encodedPassword = Base64.getEncoder().encodeToString(student.getPassword().getBytes(StandardCharsets.UTF_8));
-        student.setPassword(encodedPassword);
+        String encodedPassword = Base64.getEncoder().encodeToString(customer.getPassword().getBytes(StandardCharsets.UTF_8));
+        customer.setPassword(encodedPassword);
 
-        studentRepository.save(student);
-        return ResponseEntity.ok("Student created successfully.");
+        customerRepo.save(customer);
+        return ResponseEntity.ok("Customer created successfully.");
     }
 
-    @PostMapping("/Studentlogin")
-    public ResponseEntity<Student> login(@RequestBody Student student) {
-        Optional<Student> existingStudentOpt = Optional.ofNullable(studentRepository.findByEmail(student.getEmail()));
+    @PostMapping("/login")
+    public ResponseEntity<Customer> login(@RequestBody Customer customer) {
+        Optional<Customer> existingCustomerOpt = Optional.ofNullable(customerRepo.findByEmail(customer.getEmail()));
 
-        if (existingStudentOpt.isPresent()) {
-            String storedEncodedPassword = existingStudentOpt.get().getPassword();
+        if (existingCustomerOpt.isPresent()) {
+            String storedEncodedPassword = existingCustomerOpt.get().getPassword();
             String decodedPassword = new String(Base64.getDecoder().decode(storedEncodedPassword), StandardCharsets.UTF_8);
 
-            // Compare the decoded password with the provided password
-            if (decodedPassword.equals(student.getPassword())) {
-                return ResponseEntity.ok(existingStudentOpt.get());
+            if (decodedPassword.equals(customer.getPassword())) {
+                return ResponseEntity.ok(existingCustomerOpt.get());
             }
         }
 
-        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(null);  // Return Unauthorized if passwords don't match
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(null);
     }
 
-    // Update student details
     @PutMapping("/{id}")
-    public ResponseEntity<Student> updateStudent(@PathVariable Long id, @RequestBody Student updatedStudent) {
-        Optional<Student> existingStudentOpt = studentRepository.findById(id);
+    public ResponseEntity<Customer> updateCustomer(@PathVariable Long id, @RequestBody Customer updatedCustomer) {
+        Optional<Customer> existingCustomerOpt = customerRepo.findById(id);
 
-        if (!existingStudentOpt.isPresent()) {
+        if (!existingCustomerOpt.isPresent()) {
             return new ResponseEntity<>(HttpStatus.NOT_FOUND);
         }
 
-        Student existingStudent = existingStudentOpt.get();
+        Customer existingCustomer = existingCustomerOpt.get();
 
-        // Update only the fields provided in the request body
-        if (updatedStudent.getFirstName() != null) {
-            existingStudent.setFirstName(updatedStudent.getFirstName());
+        if (updatedCustomer.getFirstName() != null) {
+            existingCustomer.setFirstName(updatedCustomer.getFirstName());
         }
-        if (updatedStudent.getLastName() != null) {
-            existingStudent.setLastName(updatedStudent.getLastName());
+        if (updatedCustomer.getLastName() != null) {
+            existingCustomer.setLastName(updatedCustomer.getLastName());
         }
-        if (updatedStudent.getEmail() != null) {
-            existingStudent.setEmail(updatedStudent.getEmail());
+        if (updatedCustomer.getEmail() != null) {
+            existingCustomer.setEmail(updatedCustomer.getEmail());
         }
-
-        if (updatedStudent.getPassword() != null) {
-            String encodedPassword = Base64.getEncoder().encodeToString(updatedStudent.getPassword().getBytes(StandardCharsets.UTF_8));
-            existingStudent.setPassword(encodedPassword);
+        if (updatedCustomer.getPassword() != null) {
+            String encodedPassword = Base64.getEncoder().encodeToString(updatedCustomer.getPassword().getBytes(StandardCharsets.UTF_8));
+            existingCustomer.setPassword(encodedPassword);
         }
-        if (updatedStudent.getGender() != null) {
-            existingStudent.setGender(updatedStudent.getGender());
+        if (updatedCustomer.getGender() != null) {
+            existingCustomer.setGender(updatedCustomer.getGender());
         }
-        if (updatedStudent.getCity() != null) {
-            existingStudent.setCity(updatedStudent.getCity());
+        if (updatedCustomer.getCity() != null) {
+            existingCustomer.setCity(updatedCustomer.getCity());
         }
-        if (updatedStudent.getState() != null) {
-            existingStudent.setState(updatedStudent.getState());
+        if (updatedCustomer.getState() != null) {
+            existingCustomer.setState(updatedCustomer.getState());
         }
-        if (updatedStudent.getCountry() != null) {
-            existingStudent.setCountry(updatedStudent.getCountry());
+        if (updatedCustomer.getCountry() != null) {
+            existingCustomer.setCountry(updatedCustomer.getCountry());
         }
 
-        studentRepository.save(existingStudent);
-        return ResponseEntity.ok(existingStudent);
+        customerRepo.save(existingCustomer);
+        return ResponseEntity.ok(existingCustomer);
     }
 
-    // DELETE student by ID
     @DeleteMapping("/delete/{id}")
-    public ResponseEntity<String> deleteStudent(@PathVariable Long id) {
-        if (!studentRepository.existsById(id)) {
-            return ResponseEntity.status(404).body("Student not found.");
+    public ResponseEntity<String> deleteCustomer(@PathVariable Long id) {
+        if (!customerRepo.existsById(id)) {
+            return ResponseEntity.status(404).body("Customer not found.");
         }
-        studentRepository.deleteById(id);
-        return ResponseEntity.ok("Student deleted successfully.");
+        customerRepo.deleteById(id);
+        return ResponseEntity.ok("Customer deleted successfully.");
     }
 }

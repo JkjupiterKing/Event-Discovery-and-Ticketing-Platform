@@ -13,7 +13,6 @@ import java.time.LocalDateTime;
 @Getter
 @ToString
 public class Event {
-
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long eventId;
@@ -34,6 +33,10 @@ public class Event {
     private double registrationFee;
     private String status;
 
+    @Lob
+    @Column(name = "event_image")
+    private byte[] eventImage;
+
     @Column(name = "created_at")
     private LocalDateTime createdAt;
 
@@ -44,3 +47,4 @@ public class Event {
     private String contactPhone;
     private String result;
 }
+

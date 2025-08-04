@@ -162,7 +162,7 @@ const Navbar = () => {
                   <ListItemIcon>
                     <PersonIcon />
                   </ListItemIcon>
-                  <ListItemText primary="Student Management" />
+                  <ListItemText primary="Customer Management" />
                 </ListItem>
               </>
             )}
