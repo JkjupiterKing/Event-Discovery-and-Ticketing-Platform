@@ -21,7 +21,7 @@ import axios from "axios";
 const Profile = () => {
   const [editableUser, setEditableUser] = useState(null);
   const [originalUser, setOriginalUser] = useState(null);
-  const [isEditing, setIsEditing] = useState(false); // Start not editable
+  const [isEditing, setIsEditing] = useState(false);
   const [snackbarOpen, setSnackbarOpen] = useState(false);
   const [snackbarMessage, setSnackbarMessage] = useState("");
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -29,10 +29,26 @@ const Profile = () => {
   useEffect(() => {
     const userData = localStorage.getItem("user");
     if (userData) {
-      const user = JSON.parse(userData);
-      const decodedPassword = user.password ? atob(user.password) : "";
-      setEditableUser({ ...user, password: decodedPassword });
-      setOriginalUser(user);
+      try {
+        const user = JSON.parse(userData);
+        // Decode password only if it's encoded and defined
+        const decodedPassword =
+          user.password && user.password !== ""
+            ? (() => {
+                try {
+                  return atob(user.password);
+                } catch {
+                  return user.password;
+                }
+              })()
+            : "";
+        setEditableUser({ ...user, password: decodedPassword });
+        setOriginalUser(user);
+      } catch (error) {
+        console.error("Failed to parse user data from localStorage", error);
+        setEditableUser(null);
+        setOriginalUser(null);
+      }
     }
   }, []);
 
@@ -42,7 +58,11 @@ const Profile = () => {
   };
 
   const handleSave = async () => {
-    const userId = editableUser.id;
+    if (!editableUser || !editableUser.id) {
+      setSnackbarMessage("User data is missing. Please login again.");
+      setSnackbarOpen(true);
+      return;
+    }
 
     // Compare original user data with the current editable user data
     const hasChanges = Object.keys(editableUser).some(
@@ -56,16 +76,36 @@ const Profile = () => {
     }
 
     try {
+      // Encode password before sending
+      const userToUpdate = {
+        ...editableUser,
+        password:
+          editableUser.password && editableUser.password !== ""
+            ? btoa(editableUser.password)
+            : "",
+      };
+
       const response = await axios.put(
-        `http://localhost:8080/users/${userId}`,
-        editableUser
+        `http://localhost:8080/users/${editableUser.id}`,
+        userToUpdate
       );
 
       // Update local storage with updated user details
       localStorage.setItem("user", JSON.stringify(response.data));
 
-      // Update editableUser state with the new data
-      setEditableUser(response.data);
+      // Update editableUser and originalUser states
+      const decodedPassword =
+        response.data.password && response.data.password !== ""
+          ? (() => {
+              try {
+                return atob(response.data.password);
+              } catch {
+                return response.data.password;
+              }
+            })()
+          : "";
+
+      setEditableUser({ ...response.data, password: decodedPassword });
       setOriginalUser(response.data);
 
       setIsEditing(false);
@@ -86,7 +126,18 @@ const Profile = () => {
     setDialogOpen(false);
   };
 
-  if (!editableUser) return null;
+  if (!editableUser) {
+    return (
+      <>
+        <Navbar />
+        <Container maxWidth="sm" sx={{ mt: 5 }}>
+          <Typography variant="h6" color="error">
+            No user data found. Please login again.
+          </Typography>
+        </Container>
+      </>
+    );
+  }
 
   return (
     <>
@@ -95,49 +146,53 @@ const Profile = () => {
         <Paper elevation={3} sx={{ padding: 3 }}>
           <Box display="flex" alignItems="center" mb={2}>
             <Avatar
-              alt={`${editableUser.firstname} ${editableUser.lastname}`}
-              src={editableUser.profilePicture}
+              alt={`${editableUser.firstname || ""} ${
+                editableUser.lastname || ""
+              }`}
+              src={editableUser.profilePicture || ""}
               sx={{ width: 80, height: 80, mr: 2 }}
             />
-            <Typography variant="h4">{`${editableUser.firstname} ${editableUser.lastname}`}</Typography>
+            <Typography variant="h4">{`${editableUser.firstname || ""} ${
+              editableUser.lastname || ""
+            }`}</Typography>
           </Box>
           <Box>
             <TextField
               label="First Name"
               name="firstname"
-              value={editableUser.firstname}
+              value={editableUser.firstname || ""}
               onChange={handleInputChange}
               fullWidth
               margin="normal"
-              disabled={!isEditing} // Disable if not editing
+              disabled={!isEditing}
             />
             <TextField
               label="Last Name"
               name="lastname"
-              value={editableUser.lastname}
+              value={editableUser.lastname || ""}
               onChange={handleInputChange}
               fullWidth
               margin="normal"
-              disabled={!isEditing} // Disable if not editing
+              disabled={!isEditing}
             />
             <TextField
               label="Email"
               name="email"
-              value={editableUser.email}
+              value={editableUser.email || ""}
               onChange={handleInputChange}
               fullWidth
               margin="normal"
-              disabled={!isEditing} // Disable if not editing
+              disabled={!isEditing}
             />
             <TextField
               label="Password"
               name="password"
               type="password"
-              value={editableUser.password}
+              value={editableUser.password || ""}
               onChange={handleInputChange}
               fullWidth
               margin="normal"
-              disabled={!isEditing} // Disable if not editing
+              disabled={!isEditing}
             />
           </Box>
           <Box mt={2}>
@@ -163,15 +218,14 @@ const Profile = () => {
               <Button
                 variant="contained"
                 color="primary"
-                onClick={() => setIsEditing(true)} // Enable editing
+                onClick={() => setIsEditing(true)}
               >
                 Edit
               </Button>
             )}
           </Box>
         </Paper>
-        <br />
-        <br />
+
         <Snackbar
           open={snackbarOpen}
           autoHideDuration={6000}
@@ -186,7 +240,6 @@ const Profile = () => {
           </Alert>
         </Snackbar>
 
-        {/* Dialog for successful update */}
         <Dialog open={dialogOpen} onClose={handleDialogClose}>
           <DialogTitle>Update Successful</DialogTitle>
           <DialogContent>

@@ -69,6 +69,12 @@ const Home = () => {
     setSelectedEvent(null);
   };
 
+  // Helper to format date string replacing "T" with space
+  const formatDateTime = (dateTimeStr) => {
+    if (!dateTimeStr) return "N/A";
+    return dateTimeStr.replace("T", " ");
+  };
+
   return (
     <main>
       <header>
@@ -147,20 +153,35 @@ const Home = () => {
                 sx={{ maxWidth: 200, cursor: "pointer" }}
                 onClick={() => handleCardClick(item)}
               >
-                <CardMedia
-                  component="img"
-                  alt={item.eventName}
-                  height="200"
-                  image={item.img} // Assuming your API returns an image URL
-                  sx={{ width: "100%" }}
-                />
+                <Box
+                  sx={{
+                    padding: 1, // padding around the image
+                    backgroundColor: "#f0f0f0", // light gray background behind image
+                    borderRadius: 2, // rounded corners
+                    display: "flex",
+                    justifyContent: "center",
+                    alignItems: "center",
+                    height: 200, // fix height to keep cards consistent
+                    overflow: "hidden", // crop overflow if image is larger
+                    boxShadow: "0 2px 6px rgba(0,0,0,0.15)", // subtle shadow
+                  }}
+                >
+                  <CardMedia
+                    component="img"
+                    alt={item.eventName}
+                    image={`data:image/gif;base64,${item.eventImage}`}
+                    sx={{
+                      maxHeight: "100%",
+                      maxWidth: "100%",
+                      borderRadius: 1,
+                      objectFit: "contain", // keep aspect ratio, fit inside box
+                    }}
+                  />
+                </Box>
                 <CardContent>
                   <Typography variant="h6">{item.eventName}</Typography>
                   <Typography variant="body2">{item.description}</Typography>
-                  {/* Replacing cityName with category */}
-                  <Typography variant="body2">
-                    {item.category.name || "Category Not Available"}
-                  </Typography>
+                  <Typography variant="body2">{item.category}</Typography>
                 </CardContent>
               </Card>
             ))}
@@ -211,6 +232,7 @@ const Home = () => {
             borderRadius: 2,
             width: "80%",
             maxWidth: 500,
+            position: "relative",
           }}
         >
           <IconButton
@@ -221,37 +243,41 @@ const Home = () => {
           </IconButton>
           {selectedEvent && (
             <>
-              <Typography variant="h5">{selectedEvent.eventName}</Typography>
-              <Typography variant="subtitle1">
+              <Typography variant="h5" gutterBottom>
+                {selectedEvent.eventName}
+              </Typography>
+              <Typography variant="subtitle1" gutterBottom>
                 {selectedEvent.description}
               </Typography>
-              <Typography variant="body1">
+              <Typography variant="body1" gutterBottom>
                 <strong>Date & Time:</strong>{" "}
-                {new Date(selectedEvent.eventDateTime).toLocaleString()}
+                {formatDateTime(selectedEvent.eventDateTime)}
               </Typography>
-              {/* Replacing cityName with category */}
-              <Typography variant="body1">
+              <Typography variant="body1" gutterBottom>
                 <strong>Category:</strong>{" "}
-                {selectedEvent.category.name || "Category Not Available"}
+                {selectedEvent.category || "Category Not Available"}
               </Typography>
-              <Typography variant="body1">
+              <Typography variant="body1" gutterBottom>
                 <strong>Organizer:</strong> {selectedEvent.organizer}
               </Typography>
-              <Typography variant="body1">
+              <Typography variant="body1" gutterBottom>
                 <strong>Capacity:</strong> {selectedEvent.capacity}
               </Typography>
-              <Typography variant="body1">
+              <Typography variant="body1" gutterBottom>
                 <strong>Registration Fee:</strong> $
                 {selectedEvent.registrationFee}
               </Typography>
-              <Typography variant="body1">
+              <Typography variant="body1" gutterBottom>
                 <strong>Status:</strong> {selectedEvent.status}
               </Typography>
-              <Typography variant="body1">
+              <Typography variant="body1" gutterBottom>
                 <strong>Contact Email:</strong> {selectedEvent.contactEmail}
               </Typography>
-              <Typography variant="body1">
+              <Typography variant="body1" gutterBottom>
                 <strong>Contact Phone:</strong> {selectedEvent.contactPhone}
+              </Typography>
+              <Typography variant="body1" gutterBottom>
+                <strong>Result:</strong> {selectedEvent.result || "NA"}
               </Typography>
             </>
           )}

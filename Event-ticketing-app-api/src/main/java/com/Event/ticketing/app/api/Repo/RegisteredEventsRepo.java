@@ -8,6 +8,6 @@ import java.util.List;
 
 @Repository
 public interface RegisteredEventsRepo extends JpaRepository<RegisteredEvents, Long> {
-    // You can add custom query methods here if needed
-    List<RegisteredEvents> findByStudentId(Long studentId);
+    // Corrected method to use 'customer.id' instead of nonexistent 'studentId'
+    List<RegisteredEvents> findByCustomerId(Long customerId);
 }

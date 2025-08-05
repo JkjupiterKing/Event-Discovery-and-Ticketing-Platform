@@ -72,8 +72,8 @@ public class RegisteredeventsController {
     }
     // New endpoint to get registered events by student ID
     @GetMapping("/student/{studentId}")
-    public ResponseEntity<List<RegisteredEvents>> getRegisteredEventsByStudentId(@PathVariable Long studentId) {
-        List<RegisteredEvents> registeredEvents = registeredEventRepository.findByStudentId(studentId);
+    public ResponseEntity<List<RegisteredEvents>> getRegisteredEventsByCustomerId(@PathVariable Long customerId) {
+        List<RegisteredEvents> registeredEvents = registeredEventRepository.findByCustomerId(customerId);
         if (!registeredEvents.isEmpty()) {
             return new ResponseEntity<>(registeredEvents, HttpStatus.OK);
         } else {

@@ -46,7 +46,7 @@ const Login = () => {
       // If user not found at /users/login, attempt to login with /students/Studentlogin (for student)
       try {
         const response = await axios.post(
-          "http://localhost:8080/students/Studentlogin",
+          "http://localhost:8080/customers/login",
           {
             email,
             password,
@@ -54,8 +54,8 @@ const Login = () => {
         );
 
         // If student is found, store student in local storage with 'student' role and redirect to /studenthome
-        const studentData = response.data;
-        localStorage.setItem("student", JSON.stringify(studentData));
+        const userData = response.data;
+        localStorage.setItem("user", JSON.stringify(userData));
         localStorage.setItem("role", "student");
 
         setSnackbarMessage("Login successful!");

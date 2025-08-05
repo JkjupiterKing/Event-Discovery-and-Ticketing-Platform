@@ -17,21 +17,19 @@ import "./Home.css";
 
 const StudentHome = () => {
   const [eventItems, setEventItems] = useState([]);
-  const [categoryItems, setCategoryItems] = useState([]); // State to store categories
-  const [searchTerm, setSearchTerm] = useState(""); // Added state for search term
-  const [selectedCategory, setSelectedCategory] = useState(null); // State to store selected category
-  const [studentName, setStudentName] = useState(""); // State to store student first name
-  const [registrationStatus, setRegistrationStatus] = useState(""); // State for registration status
-  const [openSnackbar, setOpenSnackbar] = useState(false); // To control Snackbar visibility
+  const [categoryItems, setCategoryItems] = useState([]);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [selectedCategory, setSelectedCategory] = useState(null);
+  const [studentName, setStudentName] = useState("");
+  const [registrationStatus, setRegistrationStatus] = useState("");
+  const [openSnackbar, setOpenSnackbar] = useState(false);
 
   useEffect(() => {
-    // Fetch student first name from localStorage
     const student = JSON.parse(localStorage.getItem("student"));
     if (student) {
-      setStudentName(student.firstName); // Assuming 'firstName' is stored in the user object
+      setStudentName(student.firstName);
     }
 
-    // Fetch categories and events
     const fetchCategories = async () => {
       try {
         const response = await axios.get(
@@ -61,47 +59,49 @@ const StudentHome = () => {
   };
 
   const handleCategoryClick = (category) => {
-    if (selectedCategory === category) {
-      setSelectedCategory(null); // If same category is clicked again, deselect it
-    } else {
-      setSelectedCategory(category); // Set selected category
-    }
+    setSelectedCategory((prev) =>
+      prev && prev.name === category.name ? null : category
+    );
   };
 
-  // Filtered events based on search term and selected category
   const filteredEvents = eventItems.filter((event) => {
     const matchesSearch = event.eventName
       .toLowerCase()
       .includes(searchTerm.toLowerCase());
     const matchesCategory =
-      !selectedCategory || event.category.name === selectedCategory.name;
+      !selectedCategory || event.category === selectedCategory.name;
     return matchesSearch && matchesCategory;
   });
 
-  // Function to register the student for an event
   const registerForEvent = async (event) => {
     try {
-      const student = JSON.parse(localStorage.getItem("student"));
-      if (student) {
-        const registrationData = {
-          student: { id: student.id }, // Using the student ID here
-          event: { eventId: event.eventId }, // Using the event ID here
-          registrationTime: new Date().toISOString(), // Current date-time
-        };
+      const customer = JSON.parse(localStorage.getItem("student")); // still using 'student' key
+      if (!customer || !customer.id) {
+        setRegistrationStatus("Customer not found in localStorage");
+        setOpenSnackbar(true);
+        return;
+      }
 
-        const response = await axios.post(
-          "http://localhost:8080/registered-events/register",
-          registrationData
-        );
+      const registrationData = {
+        customer: { id: customer.id }, // ✅ matches model
+        event: { eventId: event.eventId }, // ✅ must be eventId, not id
+        registrationTime: new Date().toISOString(), // ✅ ISO timestamp
+      };
 
-        if (response.status === 201) {
-          setRegistrationStatus("Registration Successful");
-          setOpenSnackbar(true);
-        }
+      const response = await axios.post(
+        "http://localhost:8080/registered-events/register",
+        registrationData
+      );
+
+      if (response.status === 201) {
+        setRegistrationStatus("Registration Successful");
+      } else {
+        setRegistrationStatus("Registration Failed");
       }
     } catch (error) {
       console.error("Error registering for the event:", error);
       setRegistrationStatus("Registration Failed");
+    } finally {
       setOpenSnackbar(true);
     }
   };
@@ -111,12 +111,13 @@ const StudentHome = () => {
       <header>
         <Navbar />
       </header>
+
       <Box sx={{ padding: 5 }}>
         <Typography variant="h4" sx={{ marginBottom: 2 }}>
           Welcome {studentName ? `${studentName}` : "Student"}!
         </Typography>
 
-        {/* Search bar */}
+        {/* Search Bar */}
         <Box sx={{ marginBottom: 2, width: 500 }}>
           <TextField
             label="Search Events"
@@ -127,7 +128,7 @@ const StudentHome = () => {
           />
         </Box>
 
-        {/* Category Blocks */}
+        {/* Category Chips */}
         <Box
           sx={{ marginBottom: 3, display: "flex", flexWrap: "wrap", gap: 2 }}
         >
@@ -135,7 +136,9 @@ const StudentHome = () => {
             <Chip
               key={category.id}
               label={category.name}
-              color={selectedCategory === category ? "primary" : "default"}
+              color={
+                selectedCategory?.name === category.name ? "primary" : "default"
+              }
               clickable
               onClick={() => handleCategoryClick(category)}
               sx={{ cursor: "pointer" }}
@@ -143,15 +146,41 @@ const StudentHome = () => {
           ))}
         </Box>
 
-        {/* Display message if no events are found */}
+        {/* Event List */}
         {filteredEvents.length === 0 ? (
-          <Typography variant="h6" sx={{ marginTop: 2 }}>
+          <Typography variant="h6">
             No events found for the selected category or search term.
           </Typography>
         ) : (
           <Box sx={{ display: "flex", flexWrap: "wrap", gap: 2 }}>
             {filteredEvents.map((event) => (
               <Card key={event.eventId} sx={{ minWidth: 250, maxWidth: 300 }}>
+                {/* Image Block */}
+                <Box
+                  sx={{
+                    padding: 1,
+                    backgroundColor: "#f5f5f5",
+                    display: "flex",
+                    justifyContent: "center",
+                    alignItems: "center",
+                    height: 180,
+                    overflow: "hidden",
+                    borderTopLeftRadius: "4px",
+                    borderTopRightRadius: "4px",
+                  }}
+                >
+                  <img
+                    src={`data:image/jpeg;base64,${event.eventImage}`}
+                    alt={event.eventName}
+                    style={{
+                      maxHeight: "100%",
+                      maxWidth: "100%",
+                      objectFit: "contain",
+                      borderRadius: "4px",
+                    }}
+                  />
+                </Box>
+
                 <CardContent>
                   <Typography variant="h6">{event.eventName}</Typography>
                   <Typography variant="body2">{event.description}</Typography>
@@ -164,9 +193,10 @@ const StudentHome = () => {
                     <strong>Organizer:</strong> {event.organizer}
                   </Typography>
                   <Typography variant="body2">
-                    <strong>Category:</strong> {event.category.name}
+                    <strong>Category:</strong> {event.category}
                   </Typography>
                 </CardContent>
+
                 <CardActions>
                   <Button
                     color="primary"
@@ -182,7 +212,7 @@ const StudentHome = () => {
         )}
       </Box>
 
-      {/* Snackbar for showing registration status */}
+      {/* Snackbar Notification */}
       <Snackbar
         open={openSnackbar}
         autoHideDuration={6000}

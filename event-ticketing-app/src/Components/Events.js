@@ -55,13 +55,19 @@ const Events = () => {
     contactPhone: "",
     result: "",
   });
-
+  const [imageFile, setImageFile] = useState(null);
   const [editMode, setEditMode] = useState(false);
   const [editEventId, setEditEventId] = useState(null);
   const [snackbarOpen, setSnackbarOpen] = useState(false);
   const [snackbarMessage, setSnackbarMessage] = useState("");
-  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false); // To control delete confirmation dialog
-  const [eventToDelete, setEventToDelete] = useState(null); // To store the event that is selected for deletion
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [eventToDelete, setEventToDelete] = useState(null);
+
+  const getTodayDateTimeLocal = () => {
+    const now = new Date();
+    now.setSeconds(0, 0);
+    return now.toISOString().slice(0, 16);
+  };
 
   useEffect(() => {
     const fetchEvents = async () => {
@@ -84,9 +90,7 @@ const Events = () => {
         setCategories(response.data);
       } catch (error) {
         console.error("Error fetching categories:", error);
-        setSnackbarMessage(
-          "Could not fetch categories. Please try again later."
-        );
+        setSnackbarMessage("Could not fetch categories.");
         setSnackbarOpen(true);
       }
     };
@@ -118,6 +122,7 @@ const Events = () => {
       contactPhone: "",
       result: "",
     });
+    setImageFile(null);
     setEditEventId(null);
   };
 
@@ -131,13 +136,16 @@ const Events = () => {
     setNewEvent((prev) => ({ ...prev, category: { id: selectedCategoryId } }));
   };
 
+  const handleImageChange = (e) => {
+    setImageFile(e.target.files[0]);
+  };
+
   const isEmailValid = (email) => {
     const regex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     return regex.test(email);
   };
 
   const handleSubmit = async () => {
-    // Form validation
     if (
       !newEvent.eventName ||
       !newEvent.category.id ||
@@ -149,58 +157,64 @@ const Events = () => {
       !newEvent.status ||
       !newEvent.capacity ||
       !newEvent.registrationFee ||
-      !newEvent.result // Ensure result is present
+      !newEvent.result
     ) {
       setSnackbarMessage("All fields are required.");
       setSnackbarOpen(true);
       return;
     }
+
     if (!isEmailValid(newEvent.contactEmail)) {
       setSnackbarMessage("A valid Contact Email is required.");
       setSnackbarOpen(true);
       return;
     }
-    if (newEvent.capacity < 0) {
-      setSnackbarMessage("Capacity cannot be negative.");
+
+    if (newEvent.capacity < 0 || newEvent.registrationFee < 0) {
+      setSnackbarMessage("Capacity and Fee must be non-negative.");
       setSnackbarOpen(true);
       return;
     }
 
-    if (newEvent.registrationFee < 0) {
-      setSnackbarMessage("Registration Fee cannot be negative.");
-      setSnackbarOpen(true);
-      return;
+    const formData = new FormData();
+    const eventBlob = new Blob([JSON.stringify(newEvent)], {
+      type: "application/json",
+    });
+    formData.append("event", eventBlob);
+    if (imageFile) {
+      formData.append("image", imageFile);
     }
 
     try {
       if (editMode) {
-        await axios.put(`${UPDATE_EVENT_API}/${editEventId}`, newEvent);
+        await axios.put(`${UPDATE_EVENT_API}/${editEventId}`, formData, {
+          headers: { "Content-Type": "multipart/form-data" },
+        });
         setSnackbarMessage("Event updated successfully!");
-        setEvents((prev) =>
-          prev.map((event) =>
-            event.eventId === editEventId
-              ? { ...newEvent, eventId: editEventId }
-              : event
-          )
-        );
-        window.location.reload();
       } else {
-        const response = await axios.post(ADD_EVENT_API, newEvent);
+        await axios.post(ADD_EVENT_API, formData, {
+          headers: { "Content-Type": "multipart/form-data" },
+        });
         setSnackbarMessage("Event added successfully!");
-        setEvents((prev) => [...prev, response.data]);
-        window.location.reload();
       }
+
       handleModalClose();
+      window.location.reload();
     } catch (error) {
       console.error("Error saving event:", error);
-      setSnackbarMessage("Could not save event. Please try again later.");
+      setSnackbarMessage("Could not save event.");
     } finally {
       setSnackbarOpen(true);
     }
   };
 
   const handleEdit = (event) => {
-    setNewEvent({ ...event });
+    setNewEvent({
+      ...event,
+      category: {
+        id: categories.find((c) => c.name === event.category)?.id || "",
+      },
+    });
     setEditEventId(event.eventId);
     setEditMode(true);
     setModalOpen(true);
@@ -213,10 +227,10 @@ const Events = () => {
         prev.filter((event) => event.eventId !== eventToDelete.eventId)
       );
       setSnackbarMessage("Event deleted successfully!");
-      setDeleteDialogOpen(false); // Close the confirmation dialog
+      setDeleteDialogOpen(false);
     } catch (error) {
       console.error("Error deleting event:", error);
-      setSnackbarMessage("Could not delete event. Please try again later.");
+      setSnackbarMessage("Could not delete event.");
     } finally {
       setSnackbarOpen(true);
     }
@@ -275,42 +289,41 @@ const Events = () => {
             .map((event) => (
               <Card key={event.eventId} sx={{ minWidth: 250, maxWidth: 300 }}>
                 <CardContent>
+                  {event.eventImage && (
+                    <Box
+                      component="img"
+                      src={`data:image/jpeg;base64,${event.eventImage}`}
+                      alt="Event"
+                      sx={{
+                        width: "100%",
+                        height: "auto",
+                        borderRadius: 2,
+                        mb: 1,
+                      }}
+                    />
+                  )}
                   <Typography variant="h6">{event.eventName}</Typography>
                   <Typography variant="body2">{event.description}</Typography>
-                  <br />
                   <Typography variant="body2">
-                    <strong>Event Date & Time:</strong>{" "}
-                    {new Date(event.eventDateTime).toLocaleString()}
+                    <strong>Date & Time:</strong>{" "}
+                    {event.eventDateTime.replace("T", " ")}
                   </Typography>
+
                   <Typography variant="body2">
                     <strong>Organizer:</strong> {event.organizer}
                   </Typography>
                   <Typography variant="body2">
-                    <strong>Category:</strong> {event.category.name}
+                    <strong>Status:</strong> {event.status}
                   </Typography>
-                  {/* Display the result */}
-                  {event.result && (
-                    <Typography variant="body2">
-                      <strong>Result:</strong> {event.result}
-                    </Typography>
-                  )}
                 </CardContent>
                 <CardActions>
-                  <Button
-                    color="primary"
-                    onClick={() => handleEdit(event)}
-                    sx={{ backgroundColor: "#1976d2", color: "white" }}
-                  >
-                    Update
+                  <Button size="small" onClick={() => handleEdit(event)}>
+                    Edit
                   </Button>
                   <Button
-                    color="secondary"
-                    onClick={() => handleDeleteDialogOpen(event)} // Open delete dialog
-                    sx={{
-                      ml: 1,
-                      backgroundColor: "#1976d2",
-                      color: "white",
-                    }}
+                    size="small"
+                    color="error"
+                    onClick={() => handleDeleteDialogOpen(event)}
                   >
                     Delete
                   </Button>
@@ -318,210 +331,157 @@ const Events = () => {
               </Card>
             ))}
         </Box>
-      </Container>
+        <br />
+        {/* Modal for Add/Edit */}
+        <Modal open={modalOpen} onClose={handleModalClose}>
+          <Box
+            sx={{
+              position: "absolute",
+              top: "50%",
+              left: "50%",
+              transform: "translate(-50%, -50%)",
+              width: 800,
+              bgcolor: "background.paper",
+              boxShadow: 24,
+              p: 4,
+              maxHeight: "90vh",
+              overflowY: "auto",
+            }}
+          >
+            <Typography variant="h6" gutterBottom>
+              {editMode ? "Edit Event" : "Create Event"}
+            </Typography>
+            <Grid container spacing={2}>
+              {/* First Column Fields */}
+              {[
+                { label: "Event Name", name: "eventName", type: "text" },
+                { label: "Description", name: "description", type: "text" },
+                { label: "Organizer", name: "organizer", type: "text" },
+                { label: "Capacity", name: "capacity", type: "number" },
+                {
+                  label: "Registration Fee",
+                  name: "registrationFee",
+                  type: "number",
+                },
+                { label: "Contact Email", name: "contactEmail", type: "email" },
+                { label: "Contact Phone", name: "contactPhone", type: "text" },
+                { label: "Result", name: "result", type: "text" },
+              ].map((field, idx) => (
+                <Grid item xs={6} key={idx}>
+                  <TextField
+                    fullWidth
+                    label={field.label}
+                    name={field.name}
+                    type={field.type}
+                    value={newEvent[field.name]}
+                    onChange={handleInputChange}
+                  />
+                </Grid>
+              ))}
 
-      {/* Modal for adding/updating an event */}
-      <Modal open={modalOpen} onClose={handleModalClose}>
-        <div
-          style={{
-            padding: 20,
-            backgroundColor: "white",
-            margin: "100px auto",
-            width: "600px",
-            borderRadius: "8px",
-          }}
-        >
-          <Typography variant="h6">
-            {editMode ? "Update Event" : "Add New Event"}
-          </Typography>
-          <br />
-          <Grid container spacing={2}>
-            <Grid item xs={4} sx={{ marginTop: "1em" }}>
-              <TextField
-                label="Event Name"
-                value={newEvent.eventName}
-                size="small"
-                variant="outlined"
-                name="eventName"
-                fullWidth
-                onChange={handleInputChange}
-              />
-            </Grid>
-            <Grid item xs={4} sx={{ marginTop: "1em" }}>
-              <TextField
-                label="Description"
-                value={newEvent.description}
-                size="small"
-                variant="outlined"
-                name="description"
-                fullWidth
-                onChange={handleInputChange}
-              />
-            </Grid>
-            <Grid item xs={4}>
-              <Typography>Event Date and Time</Typography>
-              <TextField
-  type="datetime-local"
-  value={newEvent.eventDateTime}
-  name="eventDateTime"
-  fullWidth
-  onChange={handleInputChange}
-  InputProps={{
-    inputProps: {
-      min: new Date().toISOString().slice(0, 16),  // <-- Disable past date and time
-    },
-  }}
-/>
-            </Grid>
-            <Grid item xs={4} sx={{ marginTop: "1em" }}>
-              <TextField
-                label="Organizer"
-                value={newEvent.organizer}
-                size="small"
-                variant="outlined"
-                name="organizer"
-                fullWidth
-                onChange={handleInputChange}
-              />
-            </Grid>
-            <Grid item xs={4}>
-              <FormControl fullWidth variant="outlined" size="small">
-                <Typography>Category</Typography>
-                <Select
-                  value={newEvent.category.id}
-                  onChange={handleCategoryChange}
-                >
-                  {categories.map((category) => (
-                    <MenuItem key={category.id} value={category.id}>
-                      {category.name}
-                    </MenuItem>
-                  ))}
-                </Select>
-              </FormControl>
-            </Grid>
-            <Grid item xs={4} sx={{ marginTop: "1em" }}>
-              <TextField
-                label="Capacity"
-                type="number"
-                value={newEvent.capacity}
-                size="small"
-                variant="outlined"
-                name="capacity"
-                fullWidth
-                onChange={handleInputChange}
-              />
-            </Grid>
-            <Grid item xs={4} sx={{ marginTop: "1em" }}>
-              <TextField
-                label="Registration Fee"
-                type="number"
-                value={newEvent.registrationFee}
-                size="small"
-                variant="outlined"
-                name="registrationFee"
-                fullWidth
-                onChange={handleInputChange}
-              />
-            </Grid>
-            <Grid item xs={4}>
-              <FormControl fullWidth variant="outlined" size="small">
-                <Typography>Status</Typography>
-                <Select
-                  name="status"
-                  value={newEvent.status}
+              {/* Datetime Picker with min=Today */}
+              <Grid item xs={6}>
+                <TextField
+                  fullWidth
+                  label="Event Date & Time"
+                  name="eventDateTime"
+                  type="datetime-local"
+                  value={newEvent.eventDateTime}
                   onChange={handleInputChange}
-                >
-                  {statusOptions.map((option) => (
-                    <MenuItem key={option.value} value={option.value}>
-                      {option.label}
-                    </MenuItem>
-                  ))}
-                </Select>
-              </FormControl>
+                  InputLabelProps={{ shrink: true }}
+                  inputProps={{ min: getTodayDateTimeLocal() }}
+                />
+              </Grid>
+
+              {/* Status Dropdown */}
+              <Grid item xs={6}>
+                <FormControl fullWidth>
+                  <Typography>Status</Typography>
+                  <Select
+                    name="status"
+                    value={newEvent.status}
+                    onChange={handleInputChange}
+                  >
+                    {statusOptions.map((option) => (
+                      <MenuItem key={option.value} value={option.value}>
+                        {option.label}
+                      </MenuItem>
+                    ))}
+                  </Select>
+                </FormControl>
+              </Grid>
+
+              {/* Category Dropdown */}
+              <Grid item xs={6}>
+                <FormControl fullWidth>
+                  <Typography>Category</Typography>
+                  <Select
+                    value={newEvent.category.id}
+                    onChange={handleCategoryChange}
+                  >
+                    {categories.map((category) => (
+                      <MenuItem key={category.id} value={category.id}>
+                        {category.name}
+                      </MenuItem>
+                    ))}
+                  </Select>
+                </FormControl>
+              </Grid>
+
+              {/* Image Upload */}
+              <Grid item xs={12}>
+                <Typography>Upload Event Image</Typography>
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={handleImageChange}
+                />
+              </Grid>
             </Grid>
-            <Grid item xs={4}>
-              <TextField
-                label="Contact Email"
-                value={newEvent.contactEmail}
-                size="small"
-                variant="outlined"
-                name="contactEmail"
-                fullWidth
-                onChange={handleInputChange}
-              />
-            </Grid>
-            <Grid item xs={4}>
-              <TextField
-                label="Contact Phone"
-                value={newEvent.contactPhone}
-                size="small"
-                variant="outlined"
-                name="contactPhone"
-                fullWidth
-                onChange={handleInputChange}
-              />
-            </Grid>
-            {/* Add result Textarea */}
-            <Grid item xs={12}>
-              <TextField
-                label="Result"
-                value={newEvent.result}
-                size="small"
-                variant="outlined"
-                name="result"
-                fullWidth
-                multiline
-                rows={1}
-                onChange={handleInputChange}
-              />
-            </Grid>
-          </Grid>
-          <Box mt={2}>
-            <Button
-              variant="contained"
-              color="primary"
-              sx={{ marginRight: "10px" }}
-              onClick={handleSubmit}
-            >
-              {editMode ? "Update Event" : "Create Event"}
-            </Button>
-            <Button variant="outlined" onClick={handleModalClose}>
-              Cancel
-            </Button>
+
+            <Box display="flex" justifyContent="flex-end" mt={2}>
+              <Button onClick={handleModalClose}>Cancel</Button>
+              <Button
+                variant="contained"
+                color="primary"
+                onClick={handleSubmit}
+              >
+                {editMode ? "Update" : "Create"}
+              </Button>
+            </Box>
           </Box>
-        </div>
-      </Modal>
+        </Modal>
 
-      {/* Snackbar for notifications */}
-      <Snackbar
-        open={snackbarOpen}
-        autoHideDuration={3000}
-        onClose={handleSnackbarClose}
-      >
-        <MuiAlert
+        {/* Delete Confirmation Dialog */}
+        <Dialog open={deleteDialogOpen} onClose={handleDeleteDialogClose}>
+          <DialogTitle>Confirm Delete</DialogTitle>
+          <DialogContent>
+            Are you sure you want to delete "{eventToDelete?.eventName}"?
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={handleDeleteDialogClose}>Cancel</Button>
+            <Button color="error" onClick={handleDelete}>
+              Delete
+            </Button>
+          </DialogActions>
+        </Dialog>
+
+        {/* Snackbar */}
+        <Snackbar
+          open={snackbarOpen}
+          autoHideDuration={3000}
           onClose={handleSnackbarClose}
-          severity="success"
-          sx={{ width: "100%" }}
         >
-          {snackbarMessage}
-        </MuiAlert>
-      </Snackbar>
-
-      {/* Delete Confirmation Dialog */}
-      <Dialog open={deleteDialogOpen} onClose={handleDeleteDialogClose}>
-        <DialogTitle>Confirm Delete</DialogTitle>
-        <DialogContent>
-          <Typography>Are you sure you want to delete this event?</Typography>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={handleDeleteDialogClose} color="primary">
-            Cancel
-          </Button>
-          <Button onClick={handleDelete} color="secondary">
-            Delete
-          </Button>
-        </DialogActions>
-      </Dialog>
+          <MuiAlert
+            elevation={6}
+            variant="filled"
+            onClose={handleSnackbarClose}
+            severity="info"
+          >
+            {snackbarMessage}
+          </MuiAlert>
+        </Snackbar>
+      </Container>
     </>
   );
 };

@@ -17,11 +17,11 @@ import EventNoteIcon from "@mui/icons-material/EventNote";
 import AccountCircleIcon from "@mui/icons-material/AccountCircle";
 import ExitToAppIcon from "@mui/icons-material/ExitToApp";
 import MenuIcon from "@mui/icons-material/Menu";
-import CategoryIcon from "@mui/icons-material/Category"; // Import for Category Management
-import CloseIcon from "@mui/icons-material/Close"; // Import for Close Icon
-import PersonIcon from "@mui/icons-material/Person"; // Icon for Student Management
+import CategoryIcon from "@mui/icons-material/Category";
+import CloseIcon from "@mui/icons-material/Close";
+import PersonIcon from "@mui/icons-material/Person";
 import { styled } from "@mui/system";
-import AssignmentIcon from "@mui/icons-material/Assignment"; // Icon for Registered Events
+import AssignmentIcon from "@mui/icons-material/Assignment";
 
 const StyledAppBar = styled(AppBar)({
   background: "linear-gradient(to right, #D5006D, #FF6F20)",
@@ -47,7 +47,6 @@ const LogoContainer = styled("div")({
   marginRight: "48em",
 });
 
-// Optional: Create a styled drawer component
 const StyledDrawer = styled(Drawer)({
   "& .MuiDrawer-paper": {
     background: "linear-gradient(to right, #D5006D, #FF6F20)",
@@ -60,21 +59,17 @@ const Navbar = () => {
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [role, setRole] = useState("");
 
-  // Check role from local storage when component mounts
   useEffect(() => {
     const storedRole = localStorage.getItem("role");
     if (storedRole) {
-      setRole(storedRole); // Set role based on the localStorage
+      setRole(storedRole);
     }
   }, []);
 
   const handleLogout = () => {
-    // Remove both user and role from localStorage
     localStorage.removeItem("user");
     localStorage.removeItem("role");
     localStorage.removeItem("student");
-
-    // Navigate to the login page after logout
     navigate("/login");
   };
 
@@ -94,6 +89,7 @@ const Navbar = () => {
         <IconButton edge="start" color="inherit" onClick={toggleDrawer(true)}>
           <MenuIcon />
         </IconButton>
+
         <LogoContainer>
           <img
             src={`${process.env.PUBLIC_URL}/ticket.gif`}
@@ -118,20 +114,17 @@ const Navbar = () => {
               <CloseIcon />
             </IconButton>
           </div>
+
           <List>
-            {/* Home link - for both Admin and Student */}
-            <ListItem
-              button
-              onClick={() => navigate(role === "admin" ? "/home" : "/home")}
-              sx={{ pr: 7 }}
-            >
+            {/* Home link - shared */}
+            <ListItem button onClick={() => navigate("/home")} sx={{ pr: 7 }}>
               <ListItemIcon>
                 <HomeIcon />
               </ListItemIcon>
               <ListItemText primary="Home" />
             </ListItem>
 
-            {/* Show this for Admin only */}
+            {/* Admin-only options */}
             {role === "admin" && (
               <>
                 <ListItem
@@ -167,7 +160,7 @@ const Navbar = () => {
               </>
             )}
 
-            {/* Show this for Student only */}
+            {/* Student-only menu option */}
             {role === "student" && (
               <ListItem
                 button
@@ -181,14 +174,10 @@ const Navbar = () => {
               </ListItem>
             )}
 
-            {/* Register Events - Visible to both Admin and Student */}
+            {/* Registered Events - shared */}
             <ListItem
               button
-              onClick={() =>
-                navigate(
-                  role === "admin" ? "/RegisterEvents" : "/RegisterEvents"
-                )
-              }
+              onClick={() => navigate("/RegisterEvents")}
               sx={{ pr: 7 }}
             >
               <ListItemIcon>
@@ -198,17 +187,17 @@ const Navbar = () => {
             </ListItem>
           </List>
         </StyledDrawer>
+
         <div>
-          {/* Show the Profile button only for Admin */}
-          {role === "admin" && (
-            <StyledButton
-              component={Link}
-              to="/profile"
-              startIcon={<AccountCircleIcon />}
-            >
-              Profile
-            </StyledButton>
-          )}
+          {/* ✅ Profile button shown to both admin and student */}
+          <StyledButton
+            component={Link}
+            to="/profile"
+            startIcon={<AccountCircleIcon />}
+          >
+            Profile
+          </StyledButton>
+
           <StyledButton onClick={handleLogout} startIcon={<ExitToAppIcon />}>
             Logout
           </StyledButton>

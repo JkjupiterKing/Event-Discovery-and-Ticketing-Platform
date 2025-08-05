@@ -221,16 +221,16 @@ const RegisteredEvents = () => {
                     <strong>Category</strong>
                   </TableCell>
                   <TableCell>
-                    <strong>Student Name</strong>
+                    <strong>Customer Name</strong>
                   </TableCell>
                   <TableCell>
-                    <strong>Branch</strong>
+                    <strong>city</strong>
                   </TableCell>
                   <TableCell>
-                    <strong>Semester</strong>
+                    <strong>State</strong>
                   </TableCell>
                   <TableCell>
-                    <strong>Year</strong>
+                    <strong>Country</strong>
                   </TableCell>
                   <TableCell>
                     <strong>Registration Time</strong>
@@ -253,10 +253,11 @@ const RegisteredEvents = () => {
                       ).toLocaleString()}
                     </TableCell>
                     <TableCell>{registration.event.category.name}</TableCell>
-                    <TableCell>{registration.student.firstName}</TableCell>
-                    <TableCell>{registration.student.branch}</TableCell>
-                    <TableCell>{registration.student.semester}</TableCell>
-                    <TableCell>{registration.student.year}</TableCell>
+                    <TableCell>{registration.customer.firstName}</TableCell>
+                    <TableCell>{registration.customer.city}</TableCell>
+                    <TableCell>{registration.customer.state}</TableCell>
+                    <TableCell>{registration.customer.country}</TableCell>
+
                     <TableCell>
                       {new Date(registration.registrationTime).toLocaleString()}
                     </TableCell>
