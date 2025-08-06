@@ -25,7 +25,7 @@ const StudentHome = () => {
   const [openSnackbar, setOpenSnackbar] = useState(false);
 
   useEffect(() => {
-    const student = JSON.parse(localStorage.getItem("student"));
+    const student = JSON.parse(localStorage.getItem("user"));
     if (student) {
       setStudentName(student.firstName);
     }
@@ -75,7 +75,7 @@ const StudentHome = () => {
 
   const registerForEvent = async (event) => {
     try {
-      const customer = JSON.parse(localStorage.getItem("student")); // still using 'student' key
+      const customer = JSON.parse(localStorage.getItem("user")); // still using 'student' key
       if (!customer || !customer.id) {
         setRegistrationStatus("Customer not found in localStorage");
         setOpenSnackbar(true);
@@ -114,7 +114,7 @@ const StudentHome = () => {
 
       <Box sx={{ padding: 5 }}>
         <Typography variant="h4" sx={{ marginBottom: 2 }}>
-          Welcome {studentName ? `${studentName}` : "Student"}!
+          Welcome {studentName ? `${studentName}` : "user"}!
         </Typography>
 
         {/* Search Bar */}

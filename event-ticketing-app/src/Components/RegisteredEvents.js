@@ -15,33 +15,30 @@ import {
   DialogActions,
   DialogContent,
   DialogTitle,
+  Tooltip,
 } from "@mui/material";
 import axios from "axios";
-import { jsPDF } from "jspdf"; // Import jsPDF for PDF generation
+import { jsPDF } from "jspdf";
 import Navbar from "./Navbar";
 
 const RegisteredEvents = () => {
-  const [events, setEvents] = useState([]); // Ensure events is always an array
+  const [events, setEvents] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [loading, setLoading] = useState(false);
-  const [role, setRole] = useState(""); // Role to decide which API to call
-  const [openDialog, setOpenDialog] = useState(false); // State for managing the confirmation dialog
-  const [deleteEventId, setDeleteEventId] = useState(null); // ID of the event to be deleted
+  const [role, setRole] = useState("");
+  const [openDialog, setOpenDialog] = useState(false);
+  const [deleteEventId, setDeleteEventId] = useState(null);
 
   useEffect(() => {
     const fetchRegisteredEvents = async () => {
       setLoading(true);
       try {
-        // Fetch all registered events from the API
         const apiUrl = "http://localhost:8080/registered-events/all";
         const response = await axios.get(apiUrl);
-
-        // Check if response data is an array or an object and handle accordingly
         const responseData = Array.isArray(response.data)
-          ? response.data // If the response is an array, use it directly
-          : [response.data]; // If it's a single object, wrap it in an array
-
-        setEvents(responseData); // Set the events state
+          ? response.data
+          : [response.data];
+        setEvents(responseData);
       } catch (error) {
         console.error("Error fetching registered events:", error);
       } finally {
@@ -51,16 +48,14 @@ const RegisteredEvents = () => {
 
     fetchRegisteredEvents();
 
-    // Get the role from localStorage
     const userRole = localStorage.getItem("role");
-    setRole(userRole); // Set the role in state
-  }, []); // Empty dependency array, meaning it will run once when the component mounts
+    setRole(userRole);
+  }, []);
 
   const handleSearchChange = (e) => {
     setSearchTerm(e.target.value);
   };
 
-  // Filter events based on search term
   const filteredEvents = Array.isArray(events)
     ? events.filter((registration) =>
         registration.event.eventName
@@ -70,23 +65,20 @@ const RegisteredEvents = () => {
     : [];
 
   const handleDeleteClick = (registrationId) => {
-    // Open the confirmation dialog when delete button is clicked
     setDeleteEventId(registrationId);
     setOpenDialog(true);
   };
 
   const handleDelete = async () => {
     try {
-      // Call the delete API
       const response = await axios.delete(
         `http://localhost:8080/registered-events/${deleteEventId}`
       );
       if (response.status === 204) {
-        // On success, remove the deleted registration from the list
         setEvents((prevEvents) =>
           prevEvents.filter((event) => event.id !== deleteEventId)
         );
-        setOpenDialog(false); // Close the confirmation dialog
+        setOpenDialog(false);
       }
     } catch (error) {
       console.error("Error deleting registration:", error);
@@ -94,41 +86,59 @@ const RegisteredEvents = () => {
   };
 
   const handleCancel = () => {
-    setOpenDialog(false); // Close the confirmation dialog without deleting
+    setOpenDialog(false);
+  };
+
+  const isPastEvent = (eventDateTime) => {
+    const eventDate = new Date(eventDateTime);
+    const now = new Date();
+    return eventDate < now;
+  };
+
+  const handleSendReminder = async (registration) => {
+    try {
+      const response = await axios.post(
+        "http://localhost:8080/registered-events/send-reminder",
+        registration
+      );
+      if (response.status === 200) {
+        alert("Reminder sent to " + registration.customer.email);
+      } else {
+        alert("Failed to send reminder.");
+      }
+    } catch (error) {
+      console.error("Error sending reminder:", error);
+      alert("Error sending reminder: " + error.message);
+    }
   };
 
   const handlePrint = () => {
     const doc = new jsPDF();
-
-    // Set title
     doc.setFontSize(16);
     doc.setFont("helvetica", "bold");
     doc.text("Registered Events", 14, 22);
 
-    // Prepare data for display
     const eventData = filteredEvents.map((registration) => ({
       eventName: registration.event.eventName,
       eventDateTime: new Date(
         registration.event.eventDateTime
       ).toLocaleString(),
       category: registration.event.category.name,
-      studentName: registration.student.firstName,
-      branch: registration.student.branch,
-      semester: registration.student.semester,
-      year: registration.student.year,
+      customerName: registration.customer.firstName,
+      city: registration.customer.city,
+      state: registration.customer.state,
+      country: registration.customer.country,
       registrationTime: new Date(
         registration.registrationTime
       ).toLocaleString(),
     }));
 
-    let yPosition = 30; // Start y position for the text
+    let yPosition = 30;
 
-    // Loop through the event data and add it to the document
     eventData.forEach((registration, index) => {
       doc.setFont("helvetica", "normal");
       doc.setTextColor(0, 0, 0);
 
-      // Add event details
       doc.text(`Event Name: ${registration.eventName}`, 14, yPosition);
       yPosition += 6;
       doc.text(
@@ -139,29 +149,27 @@ const RegisteredEvents = () => {
       yPosition += 6;
       doc.text(`Category: ${registration.category}`, 14, yPosition);
       yPosition += 6;
-      doc.text(`Student Name: ${registration.studentName}`, 14, yPosition);
+      doc.text(`Customer Name: ${registration.customerName}`, 14, yPosition);
       yPosition += 6;
-      doc.text(`Branch: ${registration.branch}`, 14, yPosition);
+      doc.text(`City: ${registration.city}`, 14, yPosition);
       yPosition += 6;
-      doc.text(`Semester: ${registration.semester}`, 14, yPosition);
+      doc.text(`State: ${registration.state}`, 14, yPosition);
       yPosition += 6;
-      doc.text(`Year: ${registration.year}`, 14, yPosition);
+      doc.text(`Country: ${registration.country}`, 14, yPosition);
       yPosition += 6;
       doc.text(
         `Registration Time: ${registration.registrationTime}`,
         14,
         yPosition
       );
-      yPosition += 10; // Add space between events
+      yPosition += 10;
 
-      // Add a page if the content is too long
       if (yPosition > 250) {
         doc.addPage();
         yPosition = 20;
       }
     });
 
-    // Save the PDF
     doc.save("registered-events.pdf");
   };
 
@@ -175,7 +183,6 @@ const RegisteredEvents = () => {
           Registered Events
         </Typography>
 
-        {/* Search bar and Print button in the same line */}
         <Box
           sx={{
             display: "flex",
@@ -190,7 +197,6 @@ const RegisteredEvents = () => {
             onChange={handleSearchChange}
             sx={{ width: 500 }}
           />
-          {/* Conditionally render the button based on role */}
           {role !== "student" && (
             <Button
               variant="contained"
@@ -203,7 +209,6 @@ const RegisteredEvents = () => {
           )}
         </Box>
 
-        {/* Table of registered events */}
         {loading ? (
           <Typography>Loading events...</Typography>
         ) : (
@@ -224,7 +229,7 @@ const RegisteredEvents = () => {
                     <strong>Customer Name</strong>
                   </TableCell>
                   <TableCell>
-                    <strong>city</strong>
+                    <strong>City</strong>
                   </TableCell>
                   <TableCell>
                     <strong>State</strong>
@@ -235,10 +240,9 @@ const RegisteredEvents = () => {
                   <TableCell>
                     <strong>Registration Time</strong>
                   </TableCell>
-                  {/* If the role is admin, show a delete column */}
                   {role === "admin" && (
                     <TableCell>
-                      <strong>Action</strong>
+                      <strong>Actions</strong>
                     </TableCell>
                   )}
                 </TableRow>
@@ -257,20 +261,42 @@ const RegisteredEvents = () => {
                     <TableCell>{registration.customer.city}</TableCell>
                     <TableCell>{registration.customer.state}</TableCell>
                     <TableCell>{registration.customer.country}</TableCell>
-
                     <TableCell>
                       {new Date(registration.registrationTime).toLocaleString()}
                     </TableCell>
-                    {/* If the role is admin, display a delete button */}
+
                     {role === "admin" && (
                       <TableCell>
-                        <Button
-                          variant="contained"
-                          color="secondary"
-                          onClick={() => handleDeleteClick(registration.id)}
-                        >
-                          Delete
-                        </Button>
+                        <Box sx={{ display: "flex", gap: 1 }}>
+                          <Button
+                            variant="contained"
+                            color="error"
+                            onClick={() => handleDeleteClick(registration.id)}
+                          >
+                            Delete
+                          </Button>
+
+                          <Tooltip
+                            title={
+                              isPastEvent(registration.event.eventDateTime)
+                                ? "Can't send reminder for past events"
+                                : "Send a reminder email"
+                            }
+                          >
+                            <span>
+                              <Button
+                                variant="contained"
+                                color="primary"
+                                disabled={isPastEvent(
+                                  registration.event.eventDateTime
+                                )}
+                                onClick={() => handleSendReminder(registration)}
+                              >
+                                Send Reminder
+                              </Button>
+                            </span>
+                          </Tooltip>
+                        </Box>
                       </TableCell>
                     )}
                   </TableRow>
