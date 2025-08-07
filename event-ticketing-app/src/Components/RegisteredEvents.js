@@ -97,18 +97,35 @@ const RegisteredEvents = () => {
 
   const handleSendReminder = async (registration) => {
     try {
-      const response = await axios.post(
+      // Step 1: Send the reminder email
+      const emailResponse = await axios.post(
         "http://localhost:8080/registered-events/send-reminder",
         registration
       );
-      if (response.status === 200) {
+
+      if (emailResponse.status === 200) {
         alert("Reminder sent to " + registration.customer.email);
+
+        // Step 2: Save the reminder to the database
+        const reminderPayload = {
+          customerName:
+            registration.customer.firstName +
+            " " +
+            (registration.customer.lastName || ""),
+          eventName: registration.event.eventName,
+        };
+
+        await axios.post(
+          "http://localhost:8080/reminders/save",
+          reminderPayload
+        );
+        console.log("Reminder saved to database.");
       } else {
-        alert("Failed to send reminder.");
+        alert("Failed to send reminder email.");
       }
     } catch (error) {
-      console.error("Error sending reminder:", error);
-      alert("Error sending reminder: " + error.message);
+      console.error("Error sending/saving reminder:", error);
+      alert("Failed to send or save reminder: " + error.message);
     }
   };
 

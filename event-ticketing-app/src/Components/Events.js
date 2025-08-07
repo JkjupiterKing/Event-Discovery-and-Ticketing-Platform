@@ -306,7 +306,7 @@ const Events = () => {
                   <Typography variant="body2">{event.description}</Typography>
                   <Typography variant="body2">
                     <strong>Date & Time:</strong>{" "}
-                    {event.eventDateTime.replace("T", " ")}
+                    {event.eventDateTime.replace("T", " ")} PM
                   </Typography>
 
                   <Typography variant="body2">
@@ -430,7 +430,9 @@ const Events = () => {
 
               {/* Image Upload */}
               <Grid item xs={12}>
-                <Typography>Upload Event Image</Typography>
+                <Typography>
+                  Upload Event Image (File size must be less than 1MB){" "}
+                </Typography>
                 <input
                   type="file"
                   accept="image/*"

@@ -139,6 +139,16 @@ const Navbar = () => {
                 </ListItem>
                 <ListItem
                   button
+                  onClick={() => navigate("/reminders")}
+                  sx={{ pr: 7 }}
+                >
+                  <ListItemIcon>
+                    <AssignmentIcon />
+                  </ListItemIcon>
+                  <ListItemText primary="Reminders" />
+                </ListItem>
+                <ListItem
+                  button
                   onClick={() => navigate("/category-management")}
                   sx={{ pr: 7 }}
                 >

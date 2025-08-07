@@ -75,7 +75,7 @@ const StudentHome = () => {
 
   const registerForEvent = async (event) => {
     try {
-      const customer = JSON.parse(localStorage.getItem("user")); // still using 'student' key
+      const customer = JSON.parse(localStorage.getItem("user"));
       if (!customer || !customer.id) {
         setRegistrationStatus("Customer not found in localStorage");
         setOpenSnackbar(true);
@@ -83,18 +83,36 @@ const StudentHome = () => {
       }
 
       const registrationData = {
-        customer: { id: customer.id }, // ✅ matches model
-        event: { eventId: event.eventId }, // ✅ must be eventId, not id
-        registrationTime: new Date().toISOString(), // ✅ ISO timestamp
+        customer: { id: customer.id },
+        event: { eventId: event.eventId },
+        registrationTime: new Date().toISOString(),
       };
 
-      const response = await axios.post(
+      // Step 1: Register for the event
+      const registrationResponse = await axios.post(
         "http://localhost:8080/registered-events/register",
         registrationData
       );
 
-      if (response.status === 201) {
+      if (registrationResponse.status === 201) {
         setRegistrationStatus("Registration Successful");
+
+        // Step 2: Send registration success email (updated endpoint)
+        const successEmailData = {
+          customer: {
+            email: customer.email,
+            firstName: customer.firstName,
+          },
+          event: {
+            eventName: event.eventName,
+            eventDateTime: event.eventDateTime,
+          },
+        };
+
+        await axios.post(
+          "http://localhost:8080/registered-events/send-registration-success",
+          successEmailData
+        );
       } else {
         setRegistrationStatus("Registration Failed");
       }

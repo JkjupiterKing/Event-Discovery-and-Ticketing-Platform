@@ -28,4 +28,9 @@ public class RegisteredEvents {
 
     @Column(name = "registration_time", nullable = false)
     private LocalDateTime registrationTime;
+
+    @PrePersist
+    protected void onCreate() {
+        this.registrationTime = LocalDateTime.now();
+    }
 }

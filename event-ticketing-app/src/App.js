@@ -10,6 +10,7 @@ import Categorymanagement from "./Components/CategoryManagement";
 import StudentManagement from "./Components/StudentManagement";
 import StudentHome from "./Components/StudentHome";
 import RegisteredEvents from "./Components/RegisteredEvents";
+import Reminders from "./Components/Reminders";
 
 const App = () => {
   return (
@@ -26,6 +27,7 @@ const App = () => {
         <Route path="/Student-Management" element={<StudentManagement />} />
         <Route path="/Student-Home" element={<StudentHome />} />
         <Route path="/RegisterEvents" element={<RegisteredEvents />} />
+        <Route path="/reminders" element={<Reminders />} />
       </Routes>
     </div>
   );

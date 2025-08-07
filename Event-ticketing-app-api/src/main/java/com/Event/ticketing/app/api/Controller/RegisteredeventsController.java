@@ -100,6 +100,41 @@ public class RegisteredeventsController {
         }
     }
 
+    @PostMapping("/send-registration-success")
+    public ResponseEntity<String> sendRegistrationSuccessEmail(@RequestBody RegisteredEvents registeredEvent) {
+        if (registeredEvent == null ||
+                registeredEvent.getCustomer() == null ||
+                registeredEvent.getEvent() == null) {
+            return new ResponseEntity<>("Invalid request", HttpStatus.BAD_REQUEST);
+        }
+
+        String recipientEmail = registeredEvent.getCustomer().getEmail();
+        String firstName = registeredEvent.getCustomer().getFirstName();
+        String eventName = registeredEvent.getEvent().getEventName();
+        LocalDateTime eventDateTime = registeredEvent.getEvent().getEventDateTime();
+
+        String subject = "Registration Confirmation: " + eventName;
+        String body = String.format(
+                "Dear %s,\n\n"
+                        + "Congratulations! You have successfully registered for the event: \"%s\",\n"
+                        + "scheduled to take place on %s.\n\n"
+                        + "We're thrilled to have you join us and hope you enjoy the event.\n\n"
+                        + "Thank you for registering!\n\n"
+                        + "Best regards,\n"
+                        + "Event Ticketing Team",
+                firstName,
+                eventName,
+                eventDateTime.toString()
+        );
+
+        try {
+            emailService.sendReminderEmail(recipientEmail, subject, body); // Reuse existing method
+            return new ResponseEntity<>("Registration confirmation sent successfully to " + recipientEmail, HttpStatus.OK);
+        } catch (Exception e) {
+            return new ResponseEntity<>("Failed to send registration email: " + e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
 
     // Delete a registered event by ID
     @DeleteMapping("/{id}")
