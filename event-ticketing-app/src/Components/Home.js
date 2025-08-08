@@ -20,34 +20,61 @@ const items = [
     img: `${process.env.PUBLIC_URL}/Event1.png`,
     title: "JSS Polytechnic Sports",
     description:
-      "Get ready for action-packed sports events featuring local teams and thrilling competitions. Cheer for your favorites and experience the excitement of live sports, from football to basketball and more!",
+      "Get ready for action-packed sports events featuring local teams and thrilling competitions.",
   },
   {
     img: `${process.env.PUBLIC_URL}/Activities.jpg`,
     title: "JSS Polytechnic Cultural Events",
     description:
-      "Be a part of our vibrant cultural events, where connections are made and memories are created. Join us for workshops, festivals, and gatherings that celebrate culture, creativity, and togetherness.",
+      "Join our vibrant cultural events with workshops, festivals, and creative experiences.",
   },
 ];
 
+// Utility to safely render strings or fallback to JSON string if it's an object
+const safeRender = (field) => {
+  if (field === null || field === undefined) return "N/A";
+  return typeof field === "string" ? field : JSON.stringify(field);
+};
+
 const Home = () => {
   const [eventItems, setEventItems] = useState([]);
+  const [recommendedEvents, setRecommendedEvents] = useState([]);
   const [startIndex, setStartIndex] = useState(0);
   const itemsPerPage = 5;
   const [selectedEvent, setSelectedEvent] = useState(null);
+  const [role, setRole] = useState(null);
 
   useEffect(() => {
-    const fetchEvents = async () => {
-      try {
-        const response = await axios.get("http://localhost:8080/events/all");
-        setEventItems(response.data);
-      } catch (error) {
-        console.error("Error fetching events:", error);
-      }
-    };
+    const storedRole = localStorage.getItem("role");
+    const user = JSON.parse(localStorage.getItem("user"));
+    setRole(storedRole);
 
-    fetchEvents();
+    if (storedRole === "student" && user?.id) {
+      fetchRecommendations(user.id);
+    }
+
+    fetchAllEvents();
   }, []);
+
+  const fetchAllEvents = async () => {
+    try {
+      const response = await axios.get("http://localhost:8080/events/all");
+      setEventItems(response.data);
+    } catch (error) {
+      console.error("Error fetching events:", error);
+    }
+  };
+
+  const fetchRecommendations = async (customerId) => {
+    try {
+      const response = await axios.get(
+        `http://localhost:8080/recommendations/customer/${customerId}`
+      );
+      setRecommendedEvents(response.data || []);
+    } catch (error) {
+      console.error("Error fetching recommended events:", error);
+    }
+  };
 
   const handleNext = () => {
     if (startIndex + itemsPerPage < eventItems.length) {
@@ -69,11 +96,65 @@ const Home = () => {
     setSelectedEvent(null);
   };
 
-  // Helper to format date string replacing "T" with space
   const formatDateTime = (dateTimeStr) => {
     if (!dateTimeStr) return "N/A";
     return dateTimeStr.replace("T", " ");
   };
+
+  const filteredAllEvents =
+    role === "student"
+      ? eventItems.filter(
+          (event) =>
+            !recommendedEvents.some((rec) => rec.eventId === event.eventId)
+        )
+      : eventItems;
+
+  const renderEventCard = (item) => (
+    <Card key={item.eventId} sx={{ maxWidth: 220 }}>
+      <Box
+        sx={{
+          padding: 1,
+          backgroundColor: "#f0f0f0",
+          borderRadius: 2,
+          display: "flex",
+          justifyContent: "center",
+          alignItems: "center",
+          height: 200,
+          overflow: "hidden",
+          boxShadow: "0 2px 6px rgba(0,0,0,0.15)",
+        }}
+      >
+        <CardMedia
+          component="img"
+          alt={safeRender(item.eventName)}
+          image={`data:image/jpeg;base64,${item.eventImage}`}
+          sx={{
+            maxHeight: "100%",
+            maxWidth: "100%",
+            borderRadius: 1,
+            objectFit: "contain",
+          }}
+        />
+      </Box>
+      <CardContent>
+        <Typography variant="h6">{safeRender(item.eventName)}</Typography>
+        <Typography variant="body2" noWrap>
+          {safeRender(item.description)}
+        </Typography>
+        {/* Display only category name */}
+        <Typography variant="body2">{item.category?.name || "N/A"}</Typography>
+      </CardContent>
+      <Box textAlign="center" sx={{ paddingBottom: 1 }}>
+        <Button
+          variant="outlined"
+          size="small"
+          onClick={() => handleCardClick(item)}
+        >
+          View Details
+        </Button>
+      </Box>
+    </Card>
+  );
 
   return (
     <main>
@@ -86,8 +167,8 @@ const Home = () => {
         <Carousel
           autoPlay
           interval={5000}
-          indicators={true}
-          navButtonsAlwaysVisible={true}
+          indicators
+          navButtonsAlwaysVisible
           cycleNavigation
           sx={{ height: 300 }}
         >
@@ -105,7 +186,7 @@ const Home = () => {
               <Box
                 component="img"
                 src={item.img}
-                alt={item.title} // Accessibility improvement
+                alt={item.title}
                 sx={{
                   borderRadius: "4px",
                   width: "100%",
@@ -135,91 +216,78 @@ const Home = () => {
         </Carousel>
       </Box>
 
-      {/* Events Section */}
-      <Box sx={{ padding: 2, backgroundColor: "#181C14", color: "white" }}>
-        <Typography variant="h4" sx={{ marginBottom: 2 }}>
-          All Events
-        </Typography>
-        <Box
-          display="grid"
-          gridTemplateColumns="repeat(auto-fill, minmax(200px, 1fr))"
-          gap={2}
-        >
-          {eventItems
-            .slice(startIndex, startIndex + itemsPerPage)
-            .map((item) => (
-              <Card
-                key={item.eventId}
-                sx={{ maxWidth: 200, cursor: "pointer" }}
-                onClick={() => handleCardClick(item)}
-              >
-                <Box
-                  sx={{
-                    padding: 1, // padding around the image
-                    backgroundColor: "#f0f0f0", // light gray background behind image
-                    borderRadius: 2, // rounded corners
-                    display: "flex",
-                    justifyContent: "center",
-                    alignItems: "center",
-                    height: 200, // fix height to keep cards consistent
-                    overflow: "hidden", // crop overflow if image is larger
-                    boxShadow: "0 2px 6px rgba(0,0,0,0.15)", // subtle shadow
-                  }}
-                >
-                  <CardMedia
-                    component="img"
-                    alt={item.eventName}
-                    image={`data:image/gif;base64,${item.eventImage}`}
-                    sx={{
-                      maxHeight: "100%",
-                      maxWidth: "100%",
-                      borderRadius: 1,
-                      objectFit: "contain", // keep aspect ratio, fit inside box
-                    }}
-                  />
-                </Box>
-                <CardContent>
-                  <Typography variant="h6">{item.eventName}</Typography>
-                  <Typography variant="body2">{item.description}</Typography>
-                  <Typography variant="body2">{item.category}</Typography>
-                </CardContent>
-              </Card>
-            ))}
+      {/* Recommended Section (Only for students) */}
+      {role === "student" && (
+        <Box sx={{ padding: 2, backgroundColor: "#0F1110", color: "white" }}>
+          <Typography variant="h4" sx={{ marginBottom: 2 }}>
+            Recommended For You
+          </Typography>
+          {recommendedEvents.length > 0 ? (
+            <Box
+              display="grid"
+              gridTemplateColumns="repeat(auto-fill, minmax(220px, 1fr))"
+              gap={2}
+            >
+              {recommendedEvents.map(renderEventCard)}
+            </Box>
+          ) : (
+            <Typography variant="body1">
+              No recommendations available.
+            </Typography>
+          )}
         </Box>
-        <Box
-          display="flex"
-          justifyContent="space-between"
-          sx={{ marginTop: 2 }}
-        >
-          <Button
-            variant="contained"
-            onClick={handlePrev}
-            disabled={startIndex === 0}
-            style={{
-              backgroundColor: "white",
-              color: "black",
-              fontWeight: "bold",
-            }}
-          >
-            &lt;
-          </Button>
-          <Button
-            variant="contained"
-            onClick={handleNext}
-            disabled={startIndex + itemsPerPage >= eventItems.length}
-            style={{
-              backgroundColor: "white",
-              color: "black",
-              fontWeight: "bold",
-            }}
-          >
-            &gt;
-          </Button>
-        </Box>
-      </Box>
-      <br />
+      )}
 
-      {/* Modal for Event Details */}
+      {/* All Events Section - Hidden for Students */}
+      {role !== "student" && (
+        <Box sx={{ padding: 2, backgroundColor: "#181C14", color: "white" }}>
+          <Typography variant="h4" sx={{ marginBottom: 2 }}>
+            All Events
+          </Typography>
+          <Box
+            display="grid"
+            gridTemplateColumns="repeat(auto-fill, minmax(220px, 1fr))"
+            gap={2}
+          >
+            {filteredAllEvents
+              .slice(startIndex, startIndex + itemsPerPage)
+              .map(renderEventCard)}
+          </Box>
+
+          <Box
+            display="flex"
+            justifyContent="space-between"
+            sx={{ marginTop: 2 }}
+          >
+            <Button
+              variant="contained"
+              onClick={handlePrev}
+              disabled={startIndex === 0}
+              style={{
+                backgroundColor: "white",
+                color: "black",
+                fontWeight: "bold",
+              }}
+            >
+              &lt;
+            </Button>
+            <Button
+              variant="contained"
+              onClick={handleNext}
+              disabled={startIndex + itemsPerPage >= filteredAllEvents.length}
+              style={{
+                backgroundColor: "white",
+                color: "black",
+                fontWeight: "bold",
+              }}
+            >
+              &gt;
+            </Button>
+          </Box>
+        </Box>
+      )}
+
+      {/* Event Details Modal */}
       <Modal
         open={Boolean(selectedEvent)}
         onClose={handleCloseModal}
@@ -244,10 +312,10 @@ const Home = () => {
           {selectedEvent && (
             <>
               <Typography variant="h5" gutterBottom>
-                {selectedEvent.eventName}
+                {safeRender(selectedEvent.eventName)}
               </Typography>
               <Typography variant="subtitle1" gutterBottom>
-                {selectedEvent.description}
+                {safeRender(selectedEvent.description)}
               </Typography>
               <Typography variant="body1" gutterBottom>
                 <strong>Date & Time:</strong>{" "}
@@ -255,29 +323,33 @@ const Home = () => {
               </Typography>
               <Typography variant="body1" gutterBottom>
                 <strong>Category:</strong>{" "}
-                {selectedEvent.category || "Category Not Available"}
+                {selectedEvent.category?.name || "N/A"}
               </Typography>
               <Typography variant="body1" gutterBottom>
-                <strong>Organizer:</strong> {selectedEvent.organizer}
+                <strong>Organizer:</strong>{" "}
+                {safeRender(selectedEvent.organizer)}
               </Typography>
               <Typography variant="body1" gutterBottom>
-                <strong>Capacity:</strong> {selectedEvent.capacity}
+                <strong>Capacity:</strong> {safeRender(selectedEvent.capacity)}
               </Typography>
               <Typography variant="body1" gutterBottom>
                 <strong>Registration Fee:</strong> $
-                {selectedEvent.registrationFee}
+                {safeRender(selectedEvent.registrationFee)}
               </Typography>
               <Typography variant="body1" gutterBottom>
-                <strong>Status:</strong> {selectedEvent.status}
+                <strong>Status:</strong> {safeRender(selectedEvent.status)}
               </Typography>
               <Typography variant="body1" gutterBottom>
-                <strong>Contact Email:</strong> {selectedEvent.contactEmail}
+                <strong>Contact Email:</strong>{" "}
+                {safeRender(selectedEvent.contactEmail)}
               </Typography>
               <Typography variant="body1" gutterBottom>
-                <strong>Contact Phone:</strong> {selectedEvent.contactPhone}
+                <strong>Contact Phone:</strong>{" "}
+                {safeRender(selectedEvent.contactPhone)}
               </Typography>
               <Typography variant="body1" gutterBottom>
-                <strong>Result:</strong> {selectedEvent.result || "NA"}
+                <strong>Result:</strong>{" "}
+                {safeRender(selectedEvent.result || "NA")}
               </Typography>
             </>
           )}

@@ -19,7 +19,7 @@ const StudentHome = () => {
   const [eventItems, setEventItems] = useState([]);
   const [categoryItems, setCategoryItems] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
-  const [selectedCategory, setSelectedCategory] = useState(null);
+  const [selectedCategory, setSelectedCategory] = useState("all");
   const [studentName, setStudentName] = useState("");
   const [registrationStatus, setRegistrationStatus] = useState("");
   const [openSnackbar, setOpenSnackbar] = useState(false);
@@ -59,17 +59,23 @@ const StudentHome = () => {
   };
 
   const handleCategoryClick = (category) => {
-    setSelectedCategory((prev) =>
-      prev && prev.name === category.name ? null : category
-    );
+    if (category === "all") {
+      setSelectedCategory("all");
+    } else {
+      setSelectedCategory((prev) =>
+        prev === category.name ? "all" : category.name
+      );
+    }
   };
 
   const filteredEvents = eventItems.filter((event) => {
     const matchesSearch = event.eventName
       .toLowerCase()
       .includes(searchTerm.toLowerCase());
+
     const matchesCategory =
-      !selectedCategory || event.category === selectedCategory.name;
+      selectedCategory === "all" || event.category === selectedCategory;
+
     return matchesSearch && matchesCategory;
   });
 
@@ -88,7 +94,6 @@ const StudentHome = () => {
         registrationTime: new Date().toISOString(),
       };
 
-      // Step 1: Register for the event
       const registrationResponse = await axios.post(
         "http://localhost:8080/registered-events/register",
         registrationData
@@ -97,7 +102,12 @@ const StudentHome = () => {
       if (registrationResponse.status === 201) {
         setRegistrationStatus("Registration Successful");
 
-        // Step 2: Send registration success email (updated endpoint)
+        // Trigger recommendation generation
+        await axios.post(
+          `http://localhost:8080/recommendations/generate/${customer.id}`
+        );
+
+        // Send success email
         const successEmailData = {
           customer: {
             email: customer.email,
@@ -135,7 +145,6 @@ const StudentHome = () => {
           Welcome {studentName ? `${studentName}` : "user"}!
         </Typography>
 
-        {/* Search Bar */}
         <Box sx={{ marginBottom: 2, width: 500 }}>
           <TextField
             label="Search Events"
@@ -146,17 +155,25 @@ const StudentHome = () => {
           />
         </Box>
 
-        {/* Category Chips */}
         <Box
           sx={{ marginBottom: 3, display: "flex", flexWrap: "wrap", gap: 2 }}
         >
+          {/* Add "All Events" chip */}
+          <Chip
+            key="all"
+            label="All Events"
+            color={selectedCategory === "all" ? "primary" : "default"}
+            clickable
+            onClick={() => handleCategoryClick("all")}
+            sx={{ cursor: "pointer" }}
+          />
+
+          {/* Category chips */}
           {categoryItems.map((category) => (
             <Chip
               key={category.id}
               label={category.name}
-              color={
-                selectedCategory?.name === category.name ? "primary" : "default"
-              }
+              color={selectedCategory === category.name ? "primary" : "default"}
               clickable
               onClick={() => handleCategoryClick(category)}
               sx={{ cursor: "pointer" }}
@@ -164,7 +181,6 @@ const StudentHome = () => {
           ))}
         </Box>
 
-        {/* Event List */}
         {filteredEvents.length === 0 ? (
           <Typography variant="h6">
             No events found for the selected category or search term.
@@ -173,7 +189,6 @@ const StudentHome = () => {
           <Box sx={{ display: "flex", flexWrap: "wrap", gap: 2 }}>
             {filteredEvents.map((event) => (
               <Card key={event.eventId} sx={{ minWidth: 250, maxWidth: 300 }}>
-                {/* Image Block */}
                 <Box
                   sx={{
                     padding: 1,
@@ -183,8 +198,6 @@ const StudentHome = () => {
                     alignItems: "center",
                     height: 180,
                     overflow: "hidden",
-                    borderTopLeftRadius: "4px",
-                    borderTopRightRadius: "4px",
                   }}
                 >
                   <img
@@ -230,7 +243,6 @@ const StudentHome = () => {
         )}
       </Box>
 
-      {/* Snackbar Notification */}
       <Snackbar
         open={openSnackbar}
         autoHideDuration={6000}
