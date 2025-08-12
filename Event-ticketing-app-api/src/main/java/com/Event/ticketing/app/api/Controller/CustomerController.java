@@ -87,6 +87,9 @@ public class CustomerController {
         if (updatedCustomer.getGender() != null) {
             existingCustomer.setGender(updatedCustomer.getGender());
         }
+        if (updatedCustomer.getPhoneNumber() != null) {
+            existingCustomer.setPhoneNumber(updatedCustomer.getPhoneNumber());
+        }
         if (updatedCustomer.getCity() != null) {
             existingCustomer.setCity(updatedCustomer.getCity());
         }

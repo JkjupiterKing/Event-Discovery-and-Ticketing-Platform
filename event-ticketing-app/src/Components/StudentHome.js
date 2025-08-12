@@ -107,21 +107,32 @@ const StudentHome = () => {
           `http://localhost:8080/recommendations/generate/${customer.id}`
         );
 
-        // Send success email
-        const successEmailData = {
+        // Prepare data for sending email and SMS confirmation
+        // Prepare data for sending email and SMS confirmation
+        const successNotificationData = {
           customer: {
+            id: customer.id,
             email: customer.email,
             firstName: customer.firstName,
+            phoneNumber: formatPhoneNumber(customer.phoneNumber), // ✅ Apply formatting here
           },
           event: {
+            eventId: event.eventId,
             eventName: event.eventName,
             eventDateTime: event.eventDateTime,
           },
         };
 
+        // Send email confirmation
         await axios.post(
           "http://localhost:8080/registered-events/send-registration-success",
-          successEmailData
+          successNotificationData
+        );
+
+        // Send SMS confirmation (optional: remove if backend auto-sends)
+        await axios.post(
+          "http://localhost:8080/api/sms/send-sms-registration-success",
+          successNotificationData
         );
       } else {
         setRegistrationStatus("Registration Failed");
@@ -131,6 +142,21 @@ const StudentHome = () => {
       setRegistrationStatus("Registration Failed");
     } finally {
       setOpenSnackbar(true);
+    }
+  };
+
+  // Format phone number to E.164 with +91 if not already present
+  const formatPhoneNumber = (number) => {
+    if (!number) return "";
+    const cleaned = number.replace(/\D/g, ""); // remove non-digit characters
+    if (cleaned.startsWith("91") && cleaned.length === 12) {
+      return `+${cleaned}`;
+    } else if (cleaned.length === 10) {
+      return `+91${cleaned}`;
+    } else if (cleaned.startsWith("+91")) {
+      return cleaned;
+    } else {
+      return `+91${cleaned}`; // fallback
     }
   };
 

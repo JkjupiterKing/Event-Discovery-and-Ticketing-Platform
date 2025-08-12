@@ -95,26 +95,58 @@ const RegisteredEvents = () => {
     return eventDate < now;
   };
 
+  // ✅ Format phone number to +91XXXXXXXXXX
+  const formatPhoneNumber = (number) => {
+    if (!number) return "";
+    const cleaned = number.replace(/\D/g, "");
+    if (cleaned.startsWith("91") && cleaned.length === 12) {
+      return `+${cleaned}`;
+    } else if (cleaned.length === 10) {
+      return `+91${cleaned}`;
+    } else if (cleaned.startsWith("+91")) {
+      return cleaned;
+    } else {
+      return `+91${cleaned}`;
+    }
+  };
+
   const handleSendReminder = async (registration) => {
     try {
-      // Step 1: Send the reminder email
       const emailResponse = await axios.post(
         "http://localhost:8080/registered-events/send-reminder",
         registration
       );
 
       if (emailResponse.status === 200) {
-        alert("Reminder sent to " + registration.customer.email);
+        alert("Email reminder sent to " + registration.customer.email);
 
-        // Step 2: Save the reminder to the database
-        const reminderPayload = {
-          customerName:
-            registration.customer.firstName +
-            " " +
-            (registration.customer.lastName || ""),
-          eventName: registration.event.eventName,
+        const formattedRegistration = {
+          ...registration,
+          customer: {
+            ...registration.customer,
+            phoneNumber: formatPhoneNumber(registration.customer.phoneNumber),
+          },
         };
 
+        const smsResponse = await axios.post(
+          "http://localhost:8080/api/sms/send-sms-reminder",
+          formattedRegistration
+        );
+
+        if (smsResponse.status === 200 || smsResponse.status === 201) {
+          alert(
+            "SMS reminder sent to " + formattedRegistration.customer.phoneNumber
+          );
+        } else {
+          alert("Email sent, but failed to send SMS.");
+        }
+
+        const reminderPayload = {
+          customerName: `${registration.customer.firstName} ${
+            registration.customer.lastName || ""
+          }`,
+          eventName: registration.event.eventName,
+        };
         await axios.post(
           "http://localhost:8080/reminders/save",
           reminderPayload
@@ -124,8 +156,8 @@ const RegisteredEvents = () => {
         alert("Failed to send reminder email.");
       }
     } catch (error) {
-      console.error("Error sending/saving reminder:", error);
-      alert("Failed to send or save reminder: " + error.message);
+      console.error("Error sending reminder:", error);
+      alert("Error sending reminder: " + error.message);
     }
   };
 
@@ -152,7 +184,7 @@ const RegisteredEvents = () => {
 
     let yPosition = 30;
 
-    eventData.forEach((registration, index) => {
+    eventData.forEach((registration) => {
       doc.setFont("helvetica", "normal");
       doc.setTextColor(0, 0, 0);
 
@@ -281,7 +313,6 @@ const RegisteredEvents = () => {
                     <TableCell>
                       {new Date(registration.registrationTime).toLocaleString()}
                     </TableCell>
-
                     {role === "admin" && (
                       <TableCell>
                         <Box sx={{ display: "flex", gap: 1 }}>

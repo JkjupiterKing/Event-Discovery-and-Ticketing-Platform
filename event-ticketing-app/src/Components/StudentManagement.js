@@ -1,3 +1,4 @@
+// ✅ Imports stay the same (unchanged)
 import React, { useEffect, useState } from "react";
 import {
   Button,
@@ -26,6 +27,7 @@ import Navbar from "./Navbar";
 import axios from "axios";
 import PropTypes from "prop-types";
 
+// ✅ Pagination logic remains unchanged
 const TablePaginationActions = (props) => {
   const { count, page, rowsPerPage, onPageChange } = props;
 
@@ -74,6 +76,7 @@ const CustomerManagement = () => {
     email: "",
     password: "",
     gender: "",
+    phoneNumber: "", // ✅ Added phoneNumber
     city: "",
     state: "",
     country: "",
@@ -108,6 +111,7 @@ const CustomerManagement = () => {
       email,
       password,
       gender,
+      phoneNumber,
       city,
       state,
       country,
@@ -119,6 +123,7 @@ const CustomerManagement = () => {
       !email ||
       !password ||
       !gender ||
+      !phoneNumber || // ✅ Required validation
       !city ||
       !state ||
       !country
@@ -152,6 +157,7 @@ const CustomerManagement = () => {
         email: "",
         password: "",
         gender: "",
+        phoneNumber: "",
         city: "",
         state: "",
         country: "",
@@ -209,7 +215,8 @@ const CustomerManagement = () => {
     (customer) =>
       customer.firstName.toLowerCase().includes(searchQuery.toLowerCase()) ||
       customer.lastName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      customer.email.toLowerCase().includes(searchQuery.toLowerCase())
+      customer.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      customer.phoneNumber?.toLowerCase().includes(searchQuery.toLowerCase()) // ✅ Include phone
   );
 
   const handleChangePage = (event, newPage) => setPage(newPage);
@@ -252,6 +259,7 @@ const CustomerManagement = () => {
                 email: "",
                 password: "",
                 gender: "",
+                phoneNumber: "",
                 city: "",
                 state: "",
                 country: "",
@@ -270,6 +278,7 @@ const CustomerManagement = () => {
                 <TableCell>Last Name</TableCell>
                 <TableCell>Email</TableCell>
                 <TableCell>Gender</TableCell>
+                <TableCell>Phone</TableCell> {/* ✅ Added */}
                 <TableCell>City</TableCell>
                 <TableCell>State</TableCell>
                 <TableCell>Country</TableCell>
@@ -289,6 +298,7 @@ const CustomerManagement = () => {
                   <TableCell>{customer.lastName}</TableCell>
                   <TableCell>{customer.email}</TableCell>
                   <TableCell>{customer.gender}</TableCell>
+                  <TableCell>{customer.phoneNumber}</TableCell> {/* ✅ */}
                   <TableCell>{customer.city}</TableCell>
                   <TableCell>{customer.state}</TableCell>
                   <TableCell>{customer.country}</TableCell>
@@ -319,7 +329,7 @@ const CustomerManagement = () => {
               <TableRow>
                 <TablePagination
                   rowsPerPageOptions={[5, 10, 25, { label: "All", value: -1 }]}
-                  colSpan={8}
+                  colSpan={9}
                   count={filteredCustomers.length}
                   rowsPerPage={rowsPerPage}
                   page={page}
@@ -353,6 +363,7 @@ const CustomerManagement = () => {
                 "email",
                 "password",
                 "gender",
+                "phoneNumber", // ✅ Included in form
                 "city",
                 "state",
                 "country",
